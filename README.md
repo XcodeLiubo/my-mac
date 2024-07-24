@@ -833,6 +833,56 @@ rg可以直接在搜索的同时进行文本替换. 例如在某个c++代码工�
 
 > 最后是越来越简的写法
 
+<br/>
+
+
+fg也可以使用正则里的引用模式. 概念上是一样的. 这里以下面的案例来说明
+1. 匿名引用
+2. `$0`
+3. 命名引用
+
+> 对于这样的字符串
+```txt
+hello world
+hello      boy
+hello   girl
+```
+
+> 想要实现的效果是
+
+```txt
+HELLO-world
+HELLO-boy
+HELLO-girl
+```
+
+> 匿名引用效果
+---
+
+![rg-case-7](./.images/os-icons/022.png)
+
+> 正则`hello\s+(\w+)`在匹配成功后有2个匿名:
+> 1. `$0`: 表示匹配的整体, 如匹配到第2行时, 就表示`hello      boy`. 这个是隐含的不用指出
+> 2. `$1`: 是`(\w+)`的引用,如匹配到第3行时, 就表示`girl`
+> 
+> rg在处理`-r`选项值时, 会按正则的规则找到`$1`的值然后替换, 所以当替换变成`HELLO-$0`时, 最后结果将是:
+
+```txt
+HELLO-hello world
+HELLO-hello      boy
+HELLO-hello   girl
+```
+
+> 可以在正则时指定一个引用的名字
+
+---
+
+![rg-case-7](./.images/os-icons/023.png)
+
+> 这个写法是固定的`?P<name>`添加到`(\w+)`中的`w`前面
+
+
+
 
 
 [^ann-M2]: arm64架构
