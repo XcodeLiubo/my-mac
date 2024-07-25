@@ -241,8 +241,8 @@ Mac中流行的是iterm2, 它是一个GUI程序. 它本身实现了很全的功�
 2. `powerlever10k`: 一款zsh的主题, 本身也是zsh的脚本
 
 powerline10k同时还需要相关的字体, 这些都会在后续到了`zsh`后提到. 在这里先介绍Alacritty的配置, 默认情况下安装好Alacritty后, 不会有配置文件[^ann-alacritty-1], 但它会尝试按顺序读取这些文件, 以Mac为例:
-1. `$HOME/.config/alacritty/alacrytty.tmol`
-2. `$HOME/.alacrytty.tmol`
+1. `$HOME/.config/alacritty/alacrytty.toml`
+2. `$HOME/.alacrytty.toml`
 
 
 也就是说后读取的会覆盖前面已经设置的变量, 效果中相关的Alacritty的配置主要有:
@@ -258,7 +258,7 @@ powerline10k同时还需要相关的字体, 这些都会在后续到了`zsh`后�
 ---
 
 
-`alacritty.tmol`配置如下:
+`alacritty.toml`配置如下:
 
 <br/>
 
@@ -809,13 +809,13 @@ log/
 `!`在rg的glob模式中与gitignore的区别. 在gitignore中`!/log`表示允许追踪log目录. 但在rg中却是相反的意思, 表示不允许被搜索. 如:
 
 ```bash
-rg clap -g '!*.tmol'        # 注意用单引号, 因为双引号会被zsh扩展
+rg clap -g '!*.toml'        # 注意用单引号, 因为双引号会被zsh扩展
 ```
-rg匹配时将忽略所有后缀是`tmol`的文件. 对于如下:
+rg匹配时将忽略所有后缀是`toml`的文件. 对于如下:
 ```bash
-rg clap -g '!*.tmol' -g '*.tmol'
+rg clap -g '!*.toml' -g '*.toml'
 ```
-遵循gitignore中的覆盖, 所以会搜索所有后缀是`tmol`的文件. 具体的案例就不贴图演示了
+遵循gitignore中的覆盖, 所以会搜索所有后缀是`toml`的文件. 具体的案例就不贴图演示了
 
 <br/>
 
@@ -1098,7 +1098,7 @@ lost of special chars
 [^ann-M2]: arm64架构
 [^ann-OSX]: 基本是跟着更新的
 [^ann-alacritty-0]: 官方称是目前市面上终端最快的. 但本人不知道是不是比Kitty快
-[^ann-alacritty-1]: 默认配置文件的格式是tmol, 关于这种格式, 小伙伴自行去搜索
+[^ann-alacritty-1]: 默认配置文件的格式是toml, 关于这种格式, 小伙伴自行去搜索
 [^ann-zsh-0]: zsh是C语言写的软件,就是一个shell, 本质是命令行程序, 主要功能就是接收用户的输入, 然后会系统调用将结果反馈到终端. 同时它会向外界规定配置, 外界用户必须按这种规定提供配置, 并书写它规定的语法, 这些配置路径就是天天听到的配置文件, 也就是大名鼎鼎的shell脚本文件. 配置文件中所要提供的内容基本是环境变量等, 这些变量会被shell程序读取到内存中, shell接收用户的命令时可能用到这些变量
 [^ann-ripgrep-0]: 笔者别名有自己定义的规则
 [^ann-glob]: glob在Unix中被称为路径匹配, 如`*.c`表示所有`.c`文件. 在很多命令中看到glob模式, 其实都是一样的意义, 只是各自的算法不一样
