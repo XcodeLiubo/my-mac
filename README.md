@@ -21,6 +21,7 @@
 |fzf|模糊查找|
 |grep|ripgrep|
 |sed|sd|
+|top|htop|
 
 <br/>
 
@@ -262,7 +263,7 @@ powerline10k同时还需要相关的字体, 这些都会在后续到了`zsh`后�
 <br/>
 
 
-```tmol
+```toml
 #  https://alacritty.org/config-alacritty.html  官方配置
 # 一般是忽略大小写开头, 在配置文件中,有的是大写开头, 有的是小写, 不要管
 
@@ -863,7 +864,7 @@ $ rg --type-add 'web:*.{html,css,js}' -tweb title
 rg可以直接在搜索的同时进行文本替换. 例如在某个c++代码工程中需要将所有的`fast`的字符串替换成`FAST`. 在很多编辑器中都有全局查找替换的功能. rg提供了这种功能`--replace`或`-r`. 默认是在内存中作修改, 并将结果输出到stdout上, 实际源文件没变
 
 ### 使用场景5
-将文本中的fast替换成FAST
+将文本中的fast替换成FAST, 注意不会修改硬盘文件
 
 ---
 
@@ -1059,15 +1060,38 @@ _fzf_compgen_path() {
 
 <br/>
 
-> <font color = red>注意注释掉fd这个引擎, 修改`_fzf_compgen_path`里的搜索命令
+> <font color = red>注意注释掉fd这个引擎, 修改`_fzf_compgen_path`里的搜索命令</font>
 
 
 
+# sed(sd)
+### 简介
+sed是一款命令行文本编辑器, 它有着悠久的Unix历史, 一般Unix系统中都会预装它. 它功能虽然强大, 但使用起来比较不方便. 笔者建议安装[sd](https://github.com/chmln/sd), 相比较的优势:
+1. 轻松的正则书写, 基于JS,Python的语法
+2. 字符串模式
+3. 易于阅读
+4. 可以根据自己的使用习惯去个性化配置
+5. 最重要的是效率, 官方对比下sed是被碾压的
+
+### 安装 
+主要介绍2种:
+1. `brew install sd`
+2. `cargo install sd`
+
+> sd由rust编写, 所以可以用cargo[^ann-cargo]来安装. 笔者使用的是cargo, 当然使用homebrew也没有任何问题
 
 
+### 使用场景1
+默认情况下指定的表达式被视为正则表达式, 使用`-F`或`--fixed-strtings`来禁用
+```bash
+echo 'lost((([]))) of special chars' | sd -F '((([])))' ''
+lost of special chars
+```
+> 若不指定`-F`则会被视为正则表达式导致报错, 这里将特殊部分替换成空
 
+<br/>
 
-
+### 
 
 
 
@@ -1078,6 +1102,7 @@ _fzf_compgen_path() {
 [^ann-zsh-0]: zsh是C语言写的软件,就是一个shell, 本质是命令行程序, 主要功能就是接收用户的输入, 然后会系统调用将结果反馈到终端. 同时它会向外界规定配置, 外界用户必须按这种规定提供配置, 并书写它规定的语法, 这些配置路径就是天天听到的配置文件, 也就是大名鼎鼎的shell脚本文件. 配置文件中所要提供的内容基本是环境变量等, 这些变量会被shell程序读取到内存中, shell接收用户的命令时可能用到这些变量
 [^ann-ripgrep-0]: 笔者别名有自己定义的规则
 [^ann-glob]: glob在Unix中被称为路径匹配, 如`*.c`表示所有`.c`文件. 在很多命令中看到glob模式, 其实都是一样的意义, 只是各自的算法不一样
+[^ann-cargo]: 一款rust包管理器, 系统要有rust的环境
 
 
 
