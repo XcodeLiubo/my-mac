@@ -1,10 +1,10 @@
 <font size = 5>
 
-### 相关配置
+# 相关配置
 
-|配置|说明|
+|软硬件|说明|
 |:-|:-|
-|电脑|MacBookPro|
+|Computer|MacBookPro|
 |CPU|M2[^ann-M2]|
 |GPU|M2|
 |内存|16G|
@@ -12,29 +12,30 @@
 |操作系统|OSX[^ann-OSX]|
 |键盘|programmer dvorak|
 |输入法|rime|
-|包管理|homebrew|
+|包管理器|homebrew|
 |终端|Alacritty|
 |shell|zsh|
 |ls|eza|
 |cd|Zoxide|
 |find|fd|
-|grep|ripgrep|
 |fzf|模糊查找|
+|grep|ripgrep|
+|sed|sd|
 
 <br/>
 
 > 左边有些是经典的Unix系统命令, 右边是它的替代品, 如find的替代品为fd
 
 
-### 键盘
-先来看键盘的图
+# 键盘
+### 布局
 ![dvp](./.images/os-icons/001.png)
 
 <br/>
 
 > 笔者从`qwer`转换来已经4年了, 还是比较后悔的: 之所以这样说是因为这种键盘不适合打中文. 还有一点, 笔者用是的是五笔, 在`qwer`的五笔布局是合理的, dvorak更不适合五笔. 还有一点这种键盘在Mac上默认是没有的, 必须从网络上下载安装. 在有些linux的发行版本上是自带的
 
-- 获取步骤:
+### 安装
 
 ---
 
@@ -53,7 +54,7 @@
 ![](./.images/os-icons/005.png)
 
 
-相关的网址
+### 相关的网址
 
 1. [安装文档](https://www.kaufmann.no/roland/dvorak/macosx.html)
 2. [下载链接](https://www.kaufmann.no/downloads/macos/ProgrammerDvorak-1_2_12.pkg.zip) 
@@ -91,7 +92,8 @@ XKBOPTIONS=""
 
 <br/>
 
-### 输入法(rime)
+# rime
+### 简介
 笔者是一个追求简洁极致的人, 新起的rime必然成为笔者的选择(<font color=red>也不算新了, 好多年了</font>). 至于为何:
 1. rime本身很纯洁, 因为它就是一个映射引擎
 2. rime的速度超级快. 笔者用过如搜狗类型的输入法, 在终端键入时, 能明显感觉到和rime的响应速度差距
@@ -102,7 +104,7 @@ XKBOPTIONS=""
 
 <br/>
 
-rime配合vim的Esc的中英文切换.
+### rime-vim的Esc切换
 
 在Mac下, rime可以在配置文件中添加相关的配置兼容vim的Esc中文切换, 具体步骤:
 1. 打开配置文件(`$HOME/Library/Rime/squirrel.custom.yaml`)
@@ -140,7 +142,9 @@ app_options:                                    # 注意rime的配置文件的�
 
 <br/>
 
-### PackManager
+# HomeBrew
+
+### 安装
 Mac下常用的有homebrew和mackports, 笔者用的是homebrew. [官网文档](https://brew.sh/)(<font color = red>可能要科学上网</font>)
 
 
@@ -149,7 +153,7 @@ Mac下常用的有homebrew和mackports, 笔者用的是homebrew. [官网文档](
 
 <br/>
 
-homebrew的基本知识:
+### homebrew基础
 1. homebrew将命令行与GUI这2类不同的软件分开了, 在homebrew的帮助模式下会见到`Formulae`一般就是命令行软件, `Cask`一般都是桌面应用程序, 在Mac下桌面程序都要注册苹果的签名标识
 
 <br/>
@@ -174,7 +178,7 @@ homebrew的基本知识:
 
 <br/>
 
- 常用命令(若是Mac下M芯片记得配置别名)
+ ### 常用命令(注意M芯片的配置)
 
 |命令|说明|举例|
 |:-|:-|:-|
@@ -199,7 +203,8 @@ homebrew的基本知识:
 <br/>
 
 
-### 终端
+# Alacritty
+### 简介
 Mac中流行的是iterm2, 它是一个GUI程序. 它本身实现了很全的功能, 用户通过可视化进行配置, 入门比较低, 适合新来的小伙伴. 对于程序员它太大了, 因为它实现的功能太多所以速度比较慢, 并且大部分功能其实都用不上. 正因如此笔者转到了Alacritty. 相比较Alacritty的优点:
 1. 轻量, 像rime一样它主要的目的是为了快, 所以只实现了核心的功能, 用户可以通过配置文件实现好看的界面
 
@@ -217,6 +222,8 @@ Mac中流行的是iterm2, 它是一个GUI程序. 它本身实现了很全的功�
 
 <br/>
 
+### 笔者效果
+
 一个裸装后的Alacritty的界面可能并不好看, 先来看一下笔者目前Alacritty的界面(也未配置完)
 
 ---
@@ -226,7 +233,9 @@ Mac中流行的是iterm2, 它是一个GUI程序. 它本身实现了很全的功�
 
 <br/>
 
-图中的效果是配合了`zsh`, 它是一款shell软件[^ann-zsh-0], 其中所涉及到的插件有:
+### 配置
+
+上图中的效果是配合了`zsh`, 它是一款shell软件[^ann-zsh-0], 其中所涉及到的插件有:
 1. `oh-my-zsh`: 一个著名的zsh插件管理器, 它本身是zsh的脚本
 2. `powerlever10k`: 一款zsh的主题, 本身也是zsh的脚本
 
@@ -382,7 +391,8 @@ alacritty msg config "window.opacity=.8"        # 直接发送socket给Alacritty
  
  <br/>
 
-### ls
+# ls(eza)
+### 安装
 笔者推荐使用功能较全的[eza](https://github.com/eza-community/eza).  可以用颜色区分不同种类的文件, 包括git. 还有就是速度快
 
 
@@ -392,7 +402,7 @@ alacritty msg config "window.opacity=.8"        # 直接发送socket给Alacritty
 
 <br/>
 
-常用的选项
+### 选项(常用)
 
 |缩写|全写|默认|说明|
 |:-|:-|:-|:-|
@@ -432,6 +442,7 @@ alacritty msg config "window.opacity=.8"        # 直接发送socket给Alacritty
 
 <br/>
 
+### 配置
 笔者通过eza定义了ls命令相关的展示(如下面的命令)
 
 ```bash
@@ -441,6 +452,8 @@ alias tree="eza -a -T --git --color=always --icons=always"
 ```
 
 <br/>
+
+### 效果
 
 直接使用eza自带的tree选项, 不用特意再安装一个tree程序. 因为自定义的命令中要展示图标, 而这种展示依赖于zsh的主题powerlevel10K, 所以笔者决定以截图的方式来给出效果
 
@@ -459,7 +472,8 @@ alias tree="eza -a -T --git --color=always --icons=always"
 
 <br/>
 
-### cd
+# cd(Zoxide)
+### 安装配置
 笔者使用了[Zoxide](https://github.com/ajeetdsouza/zoxide)来替代传统的cd.
 
 安装(Mac):
@@ -491,6 +505,7 @@ eval "$(zoxide init --cmd cd zsh)"
 
 <br/>
 
+### 简单使用
 一个没有跳转记录的zoxide和cd没2样, 但随着不断使用, zoxide的作用越来越强大. 
 
 ```bash
@@ -523,7 +538,8 @@ cd tie me                       # 同上, 更模糊
 
 <br/>
 
-### fzf
+# fzf
+### 安装
 [fzf](https://github.com/junegunn/fzf)不像zoxide或eza有具体的功能, 它可以将接收到内容以交互方式展示到stdout上, 并与用户键入的内容进行模糊匹配, 筛选出内容到命令行中. 说白了就是: 提供列表展示给用户, 用户可以查找条目. fzf在功能上扩展极其广泛, 速度极快.
 
 
@@ -538,20 +554,54 @@ cd tie me                       # 同上, 更模糊
 3. 配置其他环境变量
 
 ```bash
-# 要屏蔽的目录(因为里面文件太多了)
-export FZF_IGNORE_SEARCH_PATHS=".git,node_modules,Applications,Library,.cache,.cargo,.cocoapods,.gem,.local,.mygit,.oh-my-zsh,.rustup,.rvm,.vim,Pods,linux_code,linux_core"
+### 系统中没有必要浏览的目录
+export OS_LIB_PATHS="Applications,Library,.cache,.cargo,.cocoapods,.gem,.local,.mygit,.oh-my-zsh,.rustup,.rvm,.vim,.Trash"
+## 笔者平时学习可能要用到的目录
+export TIERRY_STUDY_PATHS="Pods,linux_code,linux_core"
 
-# fzf的搜索引擎换为fd, 这里的选项是fd命令的选项(后期会换成ripgrep)
-# -H: 让fd搜索隐藏目录和文件
-# -t: 只要文件
-# --follow: 跟随软链接
-# --exclude: 让fd在搜索时屏蔽的目录(因为这些目录中的文件太多了)
-# PS: 可以在FZF_DEFAULT_OPTS中指定屏蔽目录, 但没有用, 因为fzf默认调用的是系统的find, 它不知道fd去除屏蔽的目录选项
-export FZF_DEFAULT_COMMAND="fd 
--H 
--t f 
---follow 
---exclude={${FZF_IGNORE_SEARCH_PATHS}}"
+
+### fzf
+
+# 注解注意看!!!
+#   笔者使用fzf总结起来2种模式:
+#       1. 直接键入fzf, 其实没多大用, 这个会在后续扩展      __use_style_1
+#       2. vim/cat/cd/ls ... + \ + TAB                      __use_style_2
+#       3. gof\god函数内部调用到fzf                         __use_style_3
+#       
+#   __use_style_1: 
+#       默认会触发 fzf 的 FZF_DEFAULT_COMMAND环境变量配置的命令, 该命令是rg, 会排除第1类目录:
+#           1. OS_LIB_PATHS
+#       这1类目录文件主要是系统的库文件, 基本不会动, 平常也不看它们, 这样打开速度会快很多.
+#       触发 FZF_DEFUALT_COMMAND的是2个函数gof和god, 主要是选择文件后立即打开, 不粘贴到命令行
+#
+#   __use_style_2:
+#       如"vim \TAB"后会触发 _fzf_compgen_path函数, 该函数由fzf回调出来, 函数内部调用了rg命令,
+#       实际数据传回了fzf, 同时排除2类目录. 速度上的确很快. 但有一个问题, 如Pods目录, 当
+#       用户在一个工程中想编辑Pods中某个文件时, 使用`vim + \TAB`是找不到的, 这个解决会用单独的
+#       脚本函数解决
+#
+#   PS: "cd \TAB"过程和vim一样, 不过使用的是fd的命令回传给fzf的. 以上这2类都会排除上述2类目录, 大大加快速度
+#   
+#   __use_style_3:
+#       为了解决 __use_style_2中的问题, 会搜索3个学习的目录
+#
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh      # PATH
+
+# fzf要忽略的目录
+export FZF_IGNORE_SEARCH_PATHS=".git,node_modules,${OS_LIB_PATHS},${TIERRY_STUDY_PATHS}"
+# 某些场景下不能忽略3个学习的目录
+export TIERRY_IGNORE_SEARCH_PATHS=".git,node_modules,${OS_LIB_PATHS}"
+
+
+# fzf搜索引擎替换
+### 搜索引擎fd配置
+    # -H: 让fd搜索隐藏目录和文件
+    # -t: 只要文件
+    # --follow: 跟随软链接
+    # --exclude: 让fd在搜索时屏蔽的目录(因为这些目录中的文件太多了)
+    # PS: 可以在FZF_DEFAULT_OPTS中指定屏蔽目录, 但没有用, 因为fzf默认调用的是系统的find, 它不知道fd去除屏蔽的目录选项, 注意不能换行书写
+export FZF_DEFAULT_COMMAND="fd -H -t f --follow --exclude={${TIERRY_IGNORE_SEARCH_PATHS}}"
 
 # 全局的选项, 这些选项是fzf需要的
 # -e: abc就匹配abc, 不要匹配a或ab或abc(alt-h:上 alt-b:下)
@@ -562,48 +612,38 @@ export FZF_DEFAULT_COMMAND="fd
 # --preview: 预览视图, 通过脚本内部统一处理,目前Alacritty下展示图片有问题
 # --preview-window:预览窗口属性
 # 这里可以添加--walker, --walker-skip来指定要搜索文件的类型和屏蔽的目录.
-export FZF_DEFAULT_OPTS='
--e
---walker=file,follow,hidden
---walker-skip=${FZF_IGNORE_SEARCH_PATHS}
---height=90% 
---tmux bottom,40% 
---layout=reverse 
---border=bottom
---bind=alt-b:down,alt-h:up  
---preview="$HOME/.myshell/file-preview.sh {}" 
---preview-window=right:60%:wrap'
+export FZF_DEFAULT_OPTS='-e --walker=file,follow,hidden --walker-skip=${FZF_IGNORE_SEARCH_PATHS} --height=90%  --tmux bottom,40% --layout=reverse --border=bottom --bind=alt-b:down,alt-h:up --preview="$HOME/.myshell/file-preview.sh {}" --preview-window=right:60%:wrap'
+
 
 # 修改 **TAB 事件为 \TAB
 export FZF_COMPLETION_TRIGGER='\'       # **事件触发改为 "\"
-# 搜索文件, 供 vim等编辑器用的, eg vim + \ + TAB后搜索的全为当前目录下的非目录文件
 _fzf_compgen_path() {
    fd -H -t f --follow --exclude={$FZF_IGNORE_SEARCH_PATHS} . $1
 }
-## 搜索目录, 供cd用, 同vim 
 _fzf_compgen_dir() {
    fd -H -t d --follow --exclude={$FZF_IGNORE_SEARCH_PATHS} . $1
 }
 
-# 下面这2个函数的作用是在选择后立即打开文件或目录, 但目前不知道为什么不能过滤, 所以尽量不要在$HOME和$DES下用
+# 下面这2个函数的作用是在选择后立即打开文件或目录, 所以尽量不要在$HOME和$DES下用
 gof() {
-  IFS=$'\n' files=($(fzf  --walker=dir,follow,hidden --walker-skip="${FZF_IGNORE_SEARCH_PATHS}" --multi --select-1 --exit-0 --query=$1))
-  [[ -n "$files" ]] && ${EDITOR:-vim} "${files[@]}"
+    IFS=$'\n' files=($(fzf-tmux --query="$1" --multi --select-1 --exit-0))
+    [[ -n "$files" ]] && ${EDITOR:-vim} "${files[@]}"
 }
 god() {
-  IFS=$'\n' out=("$(fzf --query="$1" --walker=dir,follow,hidden --walker-skip="${FZF_IGNORE_SEARCH_PATHS}" --exit-0 --expect=ctrl-o,ctrl-e)")
-  key=$(head -1 <<< "$out")
-  file=$(head -2 <<< "$out" | tail -1)
-  if [ -n "$file" ]; then
-    [ "$key" = ctrl-g ] && open "$file" || ${EDITOR:-vim} "$file"
-  fi
+    IFS=$'\n' out=("$(fzf-tmux --query="$1" --exit-0 --expect=ctrl-o,ctrl-e)")
+    key=$(head -1 <<< "$out")
+    file=$(head -2 <<< "$out" | tail -1)
+    if [ -n "$file" ]; then
+        [ "$key" = ctrl-o ] && open "$file" || ${EDITOR:-vim} "$file"
+    fi
 }
 ```
 
 <br/>
 
 
-场景1: 从stdin获取数据, 然后选择输出到stdout
+### 使用场景1
+从stdin获取数据, 然后选择输出到stdout
 
 ---
 
@@ -620,7 +660,8 @@ god() {
 
 <br/>
 
-场景2: 配合其他命令, 如现在想获取`/etc/passwd`下root相关的记录
+### 使用场景2
+配合其他命令, 如现在想获取`/etc/passwd`下root相关的记录
 
 ---
 
@@ -631,7 +672,8 @@ god() {
 
 <br/>
 
-场景3: 配合cd(zoxide). 比单纯的使用cd多了可视化的选择, 更方便了
+### 使用场景3
+配合zoxide(cd), 比单纯的使用cd多了可视化的选择, 更方便了
 
 ---
 
@@ -641,7 +683,8 @@ god() {
 > 这里使用cd在家目录下去找目录, 在交互的过程中, 每输入一项后, fzf都会高亮显示然后不停筛选
 
 
-场景4: 配合vim. 比如当前在任意目录下,想编辑一个层次很深的文件, 可以指定从桌面开始找
+### 使用场景4
+ 当前在任意目录下编辑一个层次很深的文件. 可以指定从桌面开始找
 
 ---
 
@@ -651,11 +694,13 @@ god() {
 <br/>
 
 
-### grep
+# grep(ripgrep)
+### 简介
 在文本搜索方面, 笔者用的是[ripgrep](https://github.com/BurntSushi/ripgrep), 号称最快的搜索器. 安装它很简单`brew install ripgrep`, 这将会直接安装可执行程序. 安装完毕后对应的命令即<font color = red>rg</font>, 笔者定义了rep[^ann-ripgrep-0]来引用到它
 
 <br/>
 
+### 测试前提工作
 笔者这里以官方使用指南来演示几个案例, 准备工作:
 1. 下载测试要用的文件
 
@@ -675,7 +720,8 @@ cd ripgrep-0.7.1
 
 <br/>
 
-场景1: 在指定文件中搜索固定的内容, 如在`README.md`中搜索`fast`的行
+### 使用场景1
+在指定文件中搜索固定的内容, 如在`README.md`中搜索`fast`的行
 
 ---
 
@@ -687,7 +733,8 @@ cd ripgrep-0.7.1
 
 <br/>
 
-场景2: 正则搜索. 搜索fast后面有可见字符的内容的行. 这个正则表达式很简单`fast\w{1,}`或`fast\w+`
+### 使用场景2
+正则搜索. 搜索fast后面有可见字符的内容的行. 这个正则表达式很简单`fast\w{1,}`或`fast\w+`
 
 ---
 
@@ -698,7 +745,8 @@ cd ripgrep-0.7.1
 <br/>
 
 
-场景3: 递归搜索. 若不指定搜索上当, 默认就是递归
+### 使用场景3
+递归搜索. 若不指定搜索上当, 默认就是递归
 
 ---
 
@@ -708,7 +756,7 @@ cd ripgrep-0.7.1
 
 <br/>
 
-
+### 忽略策略
 rg搜索时会自动过滤不搜索的文件, 默认情况下:
 1. 忽略策略
     - `.gitignore`中规定的文件
@@ -756,7 +804,8 @@ log/
 
 <br/>
 
-场景4: `!`在rg的glob模式中与gitignore的区别. 在gitignore中`!/log`表示允许追踪log目录. 但在rg中却是相反的意思, 表示不允许被搜索. 如:
+### 使用场景4
+`!`在rg的glob模式中与gitignore的区别. 在gitignore中`!/log`表示允许追踪log目录. 但在rg中却是相反的意思, 表示不允许被搜索. 如:
 
 ```bash
 rg clap -g '!*.tmol'        # 注意用单引号, 因为双引号会被zsh扩展
@@ -813,7 +862,8 @@ $ rg --type-add 'web:*.{html,css,js}' -tweb title
 
 rg可以直接在搜索的同时进行文本替换. 例如在某个c++代码工程中需要将所有的`fast`的字符串替换成`FAST`. 在很多编辑器中都有全局查找替换的功能. rg提供了这种功能`--replace`或`-r`. 默认是在内存中作修改, 并将结果输出到stdout上, 实际源文件没变
 
-场景5: 将文本中的fast替换成FAST
+### 使用场景5
+将文本中的fast替换成FAST
 
 ---
 
@@ -822,7 +872,8 @@ rg可以直接在搜索的同时进行文本替换. 例如在某个c++代码工�
 
 <br/>
 
-场景6: 替换整行. 在rg中有以下几种方案:
+### 使用场景6
+替换整行. 在rg中有以下几种方案:
 1. 正则出fast所在的行(`^.*fast.*$`), 然后替换. 
 2. `--only-matching` 或 `-o`: 用户免于写这个正则. 效果是一样的
 
@@ -836,6 +887,7 @@ rg可以直接在搜索的同时进行文本替换. 例如在某个c++代码工�
 <br/>
 
 
+### fg的正则引用
 fg也可以使用正则里的引用模式. 概念上是一样的. 这里以下面的案例来说明
 1. 匿名引用
 2. `$0`
@@ -859,7 +911,7 @@ HELLO-girl
 > 匿名引用效果
 ---
 
-![rg-case-7](./.images/os-icons/022.png)
+![rg-ref-1](./.images/os-icons/022.png)
 
 > 正则`hello\s+(\w+)`在匹配成功后有2个匿名:
 > 1. `$0`: 表示匹配的整体, 如匹配到第2行时, 就表示`hello      boy`. 这个是隐含的不用指出
@@ -877,9 +929,143 @@ HELLO-hello   girl
 
 ---
 
-![rg-case-7](./.images/os-icons/023.png)
+![rg-ref-2](./.images/os-icons/023.png)
 
 > 这个写法是固定的`?P<name>`添加到`(\w+)`中的`w`前面
+
+
+
+### 配置规则
+rg没有预定的配置文件规则, 但若是配置了环境变量`RIPGREP_CONFIG_PATH`后, 将读取这个配置路径当作配置, 配置文件格式:
+1. `#`开头的行是注释
+2. 对于有值的选项, 有2种书写格式: 1. 放在一行使用=连接起来; 2. 选项和值写到2行
+3. 配置文件中的选项和值会相当于rg的默认选项, 使用时可以指定相同的选项值来覆盖
+4. 运行rg时可以指定`--no-config`, 这样可以保证rg本次执行不会读取默认配置
+
+> 看下官方文档给的案例
+
+```txt
+--max-columns=150           # 展示结果时, 一行最多150上字符
+--max-columns-preview
+
+--type-add
+web:*.{html,css,js}*        # 添加自定义glob, 见前面的场景4 
+
+--hidden                    # 搜索隐藏的文件和目录
+
+--glob=!.git/*              # 忽略 .git 目录
+# or
+#--glob
+#!.git/*                    # 第2种写法, 选项--glob 和 值!.git/*分开到2行写
+```
+
+<br/>
+
+### 常用选项
+
+|选项|说明|
+|:-|:-|
+|`--after-context=num`|向后展示num行|
+|`--before-context=num`|向前展示num行|
+|`--context=num`|向前后展示num行|
+|`--context-separator=分隔`|有前后关联行时, 以指定的分隔一个个区域展示, 默认是`--`|
+|`--count`或`-c`|统计匹配的行数|
+|`--encoding`或`-E`|指定文件编码|
+|`--fixed`或`-F`|搜索的内容为纯字符串|
+|`--follow`或`-L`|跟随符号链接|
+|`--glob`或`-g`|搜索路径的glob模式|
+|`--hidden`或`-.`|搜索隐藏的文件和目录|
+|`-v`|对条件取反搜索|
+|`--json`|以json统计这次搜索性能|
+|`--line-number`或`-n`|显示匹配的行号|
+|`--max-colums`|最多显示行数|
+|`--max-count`|最多匹配到多少次|
+|`--max-depath`|最多递归多少层|
+|`--no-config`|不要读取配置文件中的选项|
+|`--no-ignore`|忽略`ignore`的配置|
+|`--no-ignore-dot`|忽略`.ignore`的配置|
+|`--no-ignore-exclude`|忽略过滤配置|
+|`--pretty`或`-p`|打印更好看|
+|`--quiet`或`-q`|不要输出到stdout|
+|`--regexp`或`-e`|搜索正则|
+|`--replace`或`-r`|替换|
+|`--search-zip`或`-z`|搜索zip内的文件|
+|`--smart-case`|智能搜索|
+|`--threads=num`或`-j`|开启多少条线程来搜索|
+|`--type`或`-t`|搜索的文件类型(<font color = red>见场景5</font>)|
+|`--type-no`或`-T`|屏蔽搜索的文件类型(<font color = red>见场景5</font>)|
+|`--unrestricted`或`-u`|逐级屏蔽忽略策略|
+|`--with-filename`或`-H`|每行打印文件名|
+|`--word-regexp`或`-w`|匹配单词|
+|`--files`|直接在当前上当下列出的有的文件, 这个过程是递归的|
+|`--files-with-matches`|只打印文件名|
+
+
+<br/>
+
+### fzf使用rg引擎
+rg的`--files`可以直接列出指定目录下的所有文件.
+
+```bash
+rg --files          # 默认情况下列出的是当前目录下所有文件, 并且这个过程是递归的
+
+rg $DESK --files    # 列出 桌面下所有文件
+```
+
+基于这种功能, 可以将fzf的搜索引擎配置成rg.前面已经将fzf的搜索引擎替换成了更快的fd. 实际上fd搜索file的速度几乎和rg列出file的速度一样. rg的速度主要是提现在匹配文本上, 所以换不换无所谓. 在这里笔者将替换为rg, 很重要的一点就是记录下rg的配置. 笔者的配置分为2步:
+1. rg配置文件
+2. 配置fzf相关的全局变量
+
+像前面所述, rg并没有预设的配置文件, 它会读取一个环境变量`RIPGREP_CONFIG_PATH`,rg通过该变量指定的路径文件在执行每一次的命令时, 都会加载它里面的配置. 笔者的配置如下:
+
+```txt
+# 跟随符号链接
+--follow
+
+# 搜索隐藏文件
+--hidden
+
+# 忽略rg的ignore策略
+--no-ignore
+```
+在zsh的配置文件中添加如下内容:
+
+```bash
+#export FZF_DEFAULT_COMMAND="fd -H -t f --follow --exclude={${TIERRY_IGNORE_SEARCH_PATHS}}"
+
+# 搜索引擎rg配置(配置文件, 忽略文件)
+export RIPGREP_CONFIG_PATH=$HOME/.myshell/rg.config                 
+## 排除的目录更多
+export FZF_RG_GLOB="--glob='!"'{'${FZF_IGNORE_SEARCH_PATHS}'}'"'"
+## 未排除3个学习的目录
+export FZF_NORMAL_RG_GLOB="--glob='!"'{'${TIERRY_IGNORE_SEARCH_PATHS}'}'"'"
+## 由fzf回车调用或gof,god调用
+#export FZF_DEFAULT_COMMAND="rg --files ${FZF_NORMAL_RG_GLOB}"
+
+# 某些情况下不应该忽略的3个学习目录
+export TIERRY_RG_GLOB=${FZF_NORMAL_RG_GLOB}
+export TIERRY_RG_COMMAND="rg --files ${TIERRY_RG_GLOB}"
+
+
+
+# 修改 **TAB 事件为 \TAB
+export FZF_COMPLETION_TRIGGER='\'       # **事件触发改为 "\"
+_fzf_compgen_path() {
+   #fd -H -t f --follow --exclude={$FZF_IGNORE_SEARCH_PATHS} . $1
+   # 必须用eval调用
+   eval "rg $1 --files ${FZF_RG_GLOB}"  
+}
+```
+
+<br/>
+
+> <font color = red>注意注释掉fd这个引擎, 修改`_fzf_compgen_path`里的搜索命令
+
+
+
+
+
+
 
 
 
