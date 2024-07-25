@@ -22,6 +22,9 @@
 |grep|ripgrep|
 |sed|sd|
 |top|htop|
+|编辑器|vim|
+|vim扩展|neovim|
+|终端复用|tmux|
 
 <br/>
 
@@ -1196,12 +1199,17 @@ function repw(){
 
 <br/>
 
-### top(htop)
+# top(htop)
 这个看一下效果图
 
 --- 
 
 ![sd-modify-file](./.images/os-icons/026.png)
+
+
+# [vim](./vim.md)
+
+
 
 
 [^ann-M2]: arm64架构
