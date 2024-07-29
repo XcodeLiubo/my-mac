@@ -146,6 +146,130 @@ app_options:                                    # 注意rime的配置文件的�
 
 <br/>
 
+### 86五笔
+安装好的rime只有明月拼音输入法, 默认情况下rime的配置文件位于`~/Library/Rime`下, 如果不知道怎么找, 可以右击rime的logo后选择用户设定也可以打开.笔者使用的是五笔, 这里配置五笔的方案直接用网络上整理好的.
+1. [下载所有的配置文件](https://github.com/KyleBing/rime-wubi86-jidian)
+2. 下载后将zip文件解压, 然后将`rime-wubi86-jidian`内的所有文件覆盖到`~/Library/Rime`下
+3. 重新布署
+
+### 笔者的进一步配置
+在`~/Library/Rime/quirrel.custom.yaml`配置vim模式, 因为刚下载的将原来的配置覆盖了
+```yaml
+# 在app_options栏目下配置
+  app_options:
+    com.termius-dmg.mac: # Terminal - Mac
+      ascii_mode: true
+      no_inline: true
+      vim_mode: true
+    com.apple.dt.Xcode:
+      ascii_mode: true
+      no_inline: true
+      vim_mode: true
+    com.googlecode.iterm2:
+      ascii_mode: true
+      no_inline: true
+      vim_mode: true
+    org.alacritty:
+      ascii_mode: true
+      no_inline: true
+      vim_mode: true
+    org.vim.MacVim:
+      ascii_mode: true
+      no_inline: true
+      vim_mode: true
+    com.google.Chrome: # Chrome
+      ascii_mode: true
+      no_inline: true
+      vim_mode: true
+    com.apple.Safari: # Safari
+      ascii_mode: true
+      no_inline: true
+      vim_mode: true
+    com.apple.Spotlight: 
+      ascii_mode: true
+      no_inline: true
+      vim_mode: true
+```
+
+<br/>
+
+在`~/Library/Rime/default.custom.yaml`在配置候选词语的数量
+
+```yaml
+# 在menu栏目下
+  menu:
+    page_size: 3                    # 候选词数量，最多支持 10 个, 笔者这里配置的是3个
+```
+
+<br/>
+
+继续在当前文件下配置快捷选词
+```yaml
+### 在key_binder栏目下, 事实上这里本来就是这样, 如果有的小伙伴不是, 可以到这里改成这样
+  key_binder:
+    bindings:
+#      - { when: has_menu, accept: comma, send: 2 }  # 候选2 用逗号选择 （修改的时候不要多加或少加空格，跟前面的对齐就好了）
+#      - { when: has_menu, accept: period, send: 3 } # 候选3 用句号选择
+      - { when: has_menu, accept: semicolon, send: 2 }  # 候选2 用分号
+      - { when: has_menu, accept: apostrophe, send: 3 } # 候选3 用单引号
+```
+
+<br/>
+
+在`~/Library/Rime/wubi86_jidian.schema.yaml`打开动态调频
+```yaml
+### 在translator栏目下
+translator:
+  dictionary: wubi86_jidian             # 翻译器将调取此字典文件
+  enable_charset_filter: true           # 开启字符集过滤
+  enable_completion: true               # 是否显示编码未输入完整的词条
+
+  enable_sentence: false                # 句子输入模式
+  enable_user_dict: true               # 是否开启用户词典（用户词典记录动态字词频，用户词）
+  enable_encoder: false
+
+```
+
+<br/>
+
+
+以上配置完毕后,就可以使用了. 在日常使用的过程中, 可以构造相关的词组到数据库中, 即自定义自己的词组, 在`~/Library/Rime/wubi86_jidian_extra.dict.yaml`在文件最后添加
+
+```yaml
+# --- 自定义 ---
+逼格	gkst
+可执行	srtf
+命令行	wwtf
+文件描述符	ywrt
+时间戳	nunw
+文件系统	ywtx
+本章	sguj
+编译器	xykk
+都是	ftjg
+标准库	suyl
+清零	igfw
+多态	qqdy
+泛型	itga
+泛型编程	igxt
+小伙伴	iwwu
+相对于	scgf
+可执行文件	srtw
+用作	etwt
+前序	ueyc
+是一个	jgwh
+哈希	kwqd
+几行	mttf
+相比较	sxlu
+目前为止	huyl
+多路	qqkh
+多路复用	qkte
+泛化	itwx
+
+```
+> 注意每组字与键码之前的空格数量
+
+
+
 # HomeBrew
 
 ### 安装
@@ -369,11 +493,11 @@ import = [
         # mac command + shift + enter 创建Alacritty
         {mods = "Command | Shift", key = "Enter", action ="SpawnNewInstance"},
 
-        # 默认进入到ViMode的快捷键
+        # 默认进入到ViMode的快捷键(不要vim了)
         # 在Mac上, Ctrl + Shift + Space的事件不会传递到这里来, 但怕事, 这里最好设置为None
         # 然后设置其他快捷键, 注意在vim程序中时, 这个键也是生效的. 打开后就像vim一样使用就行了
         {mods = "Control | Shift", key = "Space", action ="None"},
-        {mods = "Command | Shift", key = "Space", mode = "~Search",  action ="ToggleViMode"},
+        #{mods = "Command | Shift", key = "Space", mode = "~Search",  action ="ToggleViMode"},
 
         # 在当前桌面最大化, 并不会启用mac的新桌面
         {mods = "Command | Shift", key = "M", action = "ToggleSimpleFullscreen"},
@@ -542,160 +666,7 @@ cd tie me                       # 同上, 更模糊
 
 <br/>
 
-# fzf
-### 安装
-[fzf](https://github.com/junegunn/fzf)不像zoxide或eza有具体的功能, 它可以将接收到内容以交互方式展示到stdout上, 并与用户键入的内容进行模糊匹配, 筛选出内容到命令行中. 说白了就是: 提供列表展示给用户, 用户可以查找条目. fzf在功能上扩展极其广泛, 速度极快.
-
-
-安装(Mac):
-1. `brew install fzf`
-
-2.  加载到环境变量PATH
-```bash
-# .zshrc
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh  # 配置文件就是将可执行文件fzf加环境变量
-```
-3. 配置其他环境变量
-
-```bash
-### 系统中没有必要浏览的目录
-export OS_LIB_PATHS="Applications,Library,.cache,.cargo,.cocoapods,.gem,.local,.mygit,.oh-my-zsh,.rustup,.rvm,.vim,.Trash"
-## 笔者平时学习可能要用到的目录
-export TIERRY_STUDY_PATHS="Pods,linux_code,linux_core"
-
-
-### fzf
-
-# 注解注意看!!!
-#   笔者使用fzf总结起来2种模式:
-#       1. 直接键入fzf, 其实没多大用, 这个会在后续扩展      __use_style_1
-#       2. vim/cat/cd/ls ... + \ + TAB                      __use_style_2
-#       3. gof\god函数内部调用到fzf                         __use_style_3
-#       
-#   __use_style_1: 
-#       默认会触发 fzf 的 FZF_DEFAULT_COMMAND环境变量配置的命令, 该命令是rg, 会排除第1类目录:
-#           1. OS_LIB_PATHS
-#       这1类目录文件主要是系统的库文件, 基本不会动, 平常也不看它们, 这样打开速度会快很多.
-#       触发 FZF_DEFUALT_COMMAND的是2个函数gof和god, 主要是选择文件后立即打开, 不粘贴到命令行
-#
-#   __use_style_2:
-#       如"vim \TAB"后会触发 _fzf_compgen_path函数, 该函数由fzf回调出来, 函数内部调用了rg命令,
-#       实际数据传回了fzf, 同时排除2类目录. 速度上的确很快. 但有一个问题, 如Pods目录, 当
-#       用户在一个工程中想编辑Pods中某个文件时, 使用`vim + \TAB`是找不到的, 这个解决会用单独的
-#       脚本函数解决
-#
-#   PS: "cd \TAB"过程和vim一样, 不过使用的是fd的命令回传给fzf的. 以上这2类都会排除上述2类目录, 大大加快速度
-#   
-#   __use_style_3:
-#       为了解决 __use_style_2中的问题, 会搜索3个学习的目录
-#
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh      # PATH
-
-# fzf要忽略的目录
-export FZF_IGNORE_SEARCH_PATHS=".git,node_modules,${OS_LIB_PATHS},${TIERRY_STUDY_PATHS}"
-# 某些场景下不能忽略3个学习的目录
-export TIERRY_IGNORE_SEARCH_PATHS=".git,node_modules,${OS_LIB_PATHS}"
-
-
-# fzf搜索引擎替换
-### 搜索引擎fd配置
-    # -H: 让fd搜索隐藏目录和文件
-    # -t: 只要文件
-    # --follow: 跟随软链接
-    # --exclude: 让fd在搜索时屏蔽的目录(因为这些目录中的文件太多了)
-    # PS: 可以在FZF_DEFAULT_OPTS中指定屏蔽目录, 但没有用, 因为fzf默认调用的是系统的find, 它不知道fd去除屏蔽的目录选项, 注意不能换行书写
-export FZF_DEFAULT_COMMAND="fd -H -t f --follow --exclude={${TIERRY_IGNORE_SEARCH_PATHS}}"
-
-# 全局的选项, 这些选项是fzf需要的
-# -e: abc就匹配abc, 不要匹配a或ab或abc(alt-h:上 alt-b:下)
-# -height: 列表窗口的高度(从光标下开始到窗口的底部)
-# --tmux 这个先不管, 配合tmux
-# --layout=reverse: 输入部分的视图在顶部(默认是底部)
-# --bind: 修改上下的选择(默认是Ctrl+n(下), Ctrl+p(上)}
-# --preview: 预览视图, 通过脚本内部统一处理,目前Alacritty下展示图片有问题
-# --preview-window:预览窗口属性
-# 这里可以添加--walker, --walker-skip来指定要搜索文件的类型和屏蔽的目录.
-export FZF_DEFAULT_OPTS='-e --walker=file,follow,hidden --walker-skip=${FZF_IGNORE_SEARCH_PATHS} --height=90%  --tmux bottom,40% --layout=reverse --border=bottom --bind=alt-b:down,alt-h:up --preview="$HOME/.myshell/file-preview.sh {}" --preview-window=right:60%:wrap'
-
-
-# 修改 **TAB 事件为 \TAB
-export FZF_COMPLETION_TRIGGER='\'       # **事件触发改为 "\"
-_fzf_compgen_path() {
-   fd -H -t f --follow --exclude={$FZF_IGNORE_SEARCH_PATHS} . $1
-}
-_fzf_compgen_dir() {
-   fd -H -t d --follow --exclude={$FZF_IGNORE_SEARCH_PATHS} . $1
-}
-
-# 下面这2个函数的作用是在选择后立即打开文件或目录, 所以尽量不要在$HOME和$DES下用
-gof() {
-    IFS=$'\n' files=($(fzf-tmux --query="$1" --multi --select-1 --exit-0))
-    [[ -n "$files" ]] && ${EDITOR:-vim} "${files[@]}"
-}
-god() {
-    IFS=$'\n' out=("$(fzf-tmux --query="$1" --exit-0 --expect=ctrl-o,ctrl-e)")
-    key=$(head -1 <<< "$out")
-    file=$(head -2 <<< "$out" | tail -1)
-    if [ -n "$file" ]; then
-        [ "$key" = ctrl-o ] && open "$file" || ${EDITOR:-vim} "$file"
-    fi
-}
-```
-
-<br/>
-
-
-### 使用场景1
-从stdin获取数据, 然后选择输出到stdout
-
----
-
-![fzf-case-1-tree](./.images/os-icons/012.png)
-
-
-![fzf-case-1-gif](./.images/os-icons/013.gif)
-
-
----
-
-> 图中通过fzf直接回车后, 直接进入了交互模式, 并在列表中将当前目录下所有的文件列举出来(屏蔽了配置中的目录). 当选择文件后, fzf将文件粘贴到了stdout中
-
-
-<br/>
-
-### 使用场景2
-配合其他命令, 如现在想获取`/etc/passwd`下root相关的记录
-
----
-
-![fzf-case-2-gif](./.images/os-icons/014.gif)
-
-> 其中`-m`表示多选模式
-
-
-<br/>
-
-### 使用场景3
-配合zoxide(cd), 比单纯的使用cd多了可视化的选择, 更方便了
-
----
-
-![fzf-case-3-gif](./.images/os-icons/015.gif)
-
-
-> 这里使用cd在家目录下去找目录, 在交互的过程中, 每输入一项后, fzf都会高亮显示然后不停筛选
-
-
-### 使用场景4
- 当前在任意目录下编辑一个层次很深的文件. 可以指定从桌面开始找
-
----
-
-![fzf-case-4-gif](./.images/os-icons/016.gif)
-
-
-<br/>
+# [fzf](./fzf.md)
 
 
 # grep(ripgrep)
@@ -891,8 +862,8 @@ rg可以直接在搜索的同时进行文本替换. 例如在某个c++代码工�
 <br/>
 
 
-### fg的正则引用
-fg也可以使用正则里的引用模式. 概念上是一样的. 这里以下面的案例来说明
+### rg的正则引用
+rg也可以使用正则里的引用模式. 概念上是一样的. 这里以下面的案例来说明
 1. 匿名引用
 2. `$0`
 3. 命名引用
