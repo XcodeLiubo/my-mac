@@ -1,7 +1,7 @@
 <font size = 5>
 
 # 简介
-[fzf](https://github.com/junegunn/fzf)是一个通用的命令行交互式模糊查找器. 具体来说它是一个适用于任何类型列表的交互式过滤程序, 文件,命令历史记录，进程,主机名,书签,git提交等. 它实现了一种模糊匹配算法, 可以快速输入省略字符获取想要的结果.
+[fzf](https://github.com/junegunn/fzf)是一个通用的命令行交互式模糊查找器. 具体来说它是一个适用于任何类型列表的交互式过滤程序. 文件,命令历史记录，进程,主机名,书签,git提交等. 它实现了一种模糊匹配算法, 可以快速输入省略字符获取想要的结果.
 > 说白了: fzf接收任何能构成列表的记录, 然后给出交互式视图, 用户可以键入关键字筛选出自己想要的结果. fzf是用go语言所写
 
 ---
@@ -24,7 +24,9 @@ fzf接收标准输入的数据, 这些数据的形式类似于列表, fzf收到�
 
 2.  在当前的zsh中配置fzf
 ```bash
-# 若文件存在, 则加载它. .fzf.zsh主要功能是添加可执行文件fzf的路径到环境变量
+# 加载fzf的脚本, 里面主要做了:
+## 添加fzf的环境变量
+## 添加shell的快捷键
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh  
 ```
 > 还有其他安装方式, 不同的安装方式配置的步骤是不一样的, 可以看[官方说明](https://github.com/junegunn/fzf?tab=readme-ov-file#installation)
@@ -34,7 +36,7 @@ fzf接收标准输入的数据, 这些数据的形式类似于列表, fzf收到�
 
 
 # 用法
-### 无参启动fzf
+### 无参启动fzf <a id="link-no-arg-start"/>
 没有任何参数的fzf将会调用`find`程序将当前目录下所有的文件(<font color = red>递归</font>)展示到交互视图中
 > 笔者这里以虚拟机下的linux来演示, 因为该环境下fzf是纯净的.
 
@@ -77,7 +79,7 @@ echo "" | fzf
 > 键入这句脚本后, fzf也会开启交互视图，但其实列表中没有内容的, 但回车后也会输出换行到屏幕, 这种情况没有意义. 可以使用`--print0`选项, 这样fzf不会打印任何内容到标准标出
 
 
-### vim场景版本1
+### vim场景版本1 
 有这样需求: 键入vim时直接在当前目录下选择文件后打开它.
 
 正常情况下在shell中键入vim后, 再按`TAB`shell会给出可编辑的文件让用户选择编辑, 如下图:
@@ -90,9 +92,29 @@ echo "" | fzf
 
 ```bash
 vim $(fzf)
+
+# 或
+
+fzf | xargs -I filename vim filename
 ```
 
 > 这种形式, 用户直接在列表中选择相应的文件后，fzf将该文件输出到`vim `后后面, 再按回车即可打开vim编辑它
+
+<br/>
+
+### vim场景版本2
+上面的版本需要在选择后再点击回车才能进入vim编辑, 现在想实现选中后直接进入vim编辑文件. 首先fzf默认不带附加选项时, 只会将选择的结果输出到标准输出, 所以单纯的使用vim并不能实现该功能
+
+在shell中可以使用`eval`和`command`来实现这个功能
+
+```bash
+eval "vim $(fzf)"          
+
+# 或
+
+command vim $(fzf)
+```
+> 这里借助shell的2个内置命令来完成操作, eval需要的是整体的字符串, cmmand后面可以跟随参数, 它们内部来fork出vim， 将参数传递给vim进程
 
 
 <br/>
@@ -145,6 +167,7 @@ fzf --tmux bottom,40%,90%   # bottom, W:40%, H:90%
 > 当没有在tmux环境下时, 将自动忽略
 
 <br/>
+
 
 
 # 搜索规则
@@ -214,10 +237,257 @@ fzf --tmux bottom,40%,90%   # bottom, W:40%, H:90%
 `lib .framework$ | .a$`表示以`lib`开头结尾是`.a`或`.framework`
 
 
+
+
 <br/>
 
-### 环境变量 
+# 环境变量 
+### TTY
+[前面](#link-no-arg-start)介绍过, fzf在命令行不接收任何参数启动时, 内部默认调用了系统的find命令来查找当前目录下所有的文件并展示在交互视图中. 这种使用在fzf中被称为`FZF_DEFAULT`. 像`echo hello | fzf`的使用不会触发内部的find. 通过配置相关的环境变量可以改变这一行为, 步骤:
+1. `FZF_DEFAULT_COMMAND`: fzf无参启动时, 数据从哪里来(<font color = red>默认是find查找的内容</font>). 
+2. `FZF_DEFALUT_OPTS`: 为fzf指定本身的选项.
+3. `FZF_DEFAULT_OPTS_FILE`: `FZF_DEFAULT_OPTS`可以使用一个文件来替代, 这样做的目的方便管理默认选项
 
+
+### `FZF_DEFAULT_COMMAND`
+其实它就是告诉fzf列表内容的来源, 这里可以来测试:
+1. 有这个变量, 但内容是空
+2. 有这个变量, 但内容是其他
+
+
+```bash
+## 在 .zshrc中
+export FZF_DEFAULT_COMMAND=""
+```
+
+---
+
+<img src="./.images/fzf-icons/017.png"/>
+
+> 可以发现还是调用了find
+
+<br/>
+
+```bash
+export FZF_DEFAULT_COMMAND="eoch 'hello world'"
+```
+
+--- 
+
+<img src="./.images/fzf-icons/018.png"/>
+
+> 发现该变量里的内容确实改变了无参下fzf的行为
+
+
+### fzf替换默认的搜索引擎
+原理就是指定`FZF_DEFAULT_COMMAND`, 以下是使用`fd`和`ripgrep`来改变fzf的无参默认行为的配置
+
+```bash
+export FZF_DEFAULT_COMMAND="fd -H -t f --follow ."
+# 或
+export FZF_DEFAULT_COMMAND="rg . --files" 
+```
+
+> 以上是简单的替换fzf默认的find, fd和rg(<font color = red>ripgrep</font>)搜索速度极快. 
+
+
+### `FZF_DEFAULT_OPTS`
+该环境变量是无参启动fzf时, 默认的选项. 一般情况下会将fzf常用的选项添加进去:
+1. `-e`: 搜索时精确匹配
+2. `--walker`: fzf间接告诉find搜索的文件类型. <font color = red>若搜索引擎是fd或ripgrep时没有效果</font>, 但为了兼容性最好还是加上:
+    - dir: 搜索目录
+    - file:搜索文件
+    - follow:跟随符号链接
+    - hidden:搜索隐藏文件或目录
+3. `--walker-skip`: 告诉find不要在什么路径下搜索. 同样搜索引擎是其他时没有效果
+    - `--walker-skip=${path1,path2}`
+    - 有更多的往后加就行了, 注意格式
+4. 布局相关:
+    - `--height`
+    - `--layout`
+    - `--border`
+5. 预览视图: 即聚焦切换视图中选项时,要怎么展示. 如有的是图片,有的是pdf, 这就需要区分开用不同的程序去渲染. 后面会有单独的章节介绍预览视图
+6. 其他高级的交互选项: 这后面再细说
+
+下面是一个例子<font color = red>注意要写在一行</font>
+```bash
+export FZF_DEFAULT_OPTS='-e --walker=file,follow,hidden --walker-skip=${.git,node_modules} --height=90%  --tmux bottom,40% --layout=reverse --border=bottom --bind=alt-b:down,alt-h:up --preview="$HOME/.myshell/file-preview.sh {}" --preview-window=right:60%:wrap'
+
+## 多指定了 --tmux选项, 这个配合tmux
+### --bind指定了可以使用 Alt+b往下, Alt+h:往上
+### --preview将fzf传递的列表值交给 指定的shell脚本去处理, 该脚本的工作就是要区分不同的文件调用不同程序去渲染出预览视图
+### --preview-window预览视图布局
+```
+> 选项中指定了`--walker`相关的是为了兼容, 若fzf的搜索引擎是find(<font color = red>Unix系统原生</font>), 这些选项会被fzf处理并传递到find对应行为的选项. 所以若搜索引擎是`ripgrep`时必须在`FZF_DEFAULT_COMMAND`中指定要对应的选项, 因为fzf本身不知道rg这个程序具体的选项细节.
+
+
+# 配合shell
+### 4个快捷模式
+fzf的强大在于可以和其他程序无缝衔接. fzf提供了5个模式:
+1. `Ctrl+T`: 获取文件和目录的列表
+2. `Alt+C`: 获取目录列表
+3. `Ctrl+R`: 获取历史列表
+4. `any-cmd [path]**<TAB>`: 任何命令都可以以这种模式调用, 所以这个命令是抽象的, 需要用户自己定义. 它会回调`_fzf_comrun`, 在该函数中用户可以得到的参数:
+    - 命令参数`any-cmd $1`
+    - 路径`$2`
+
+
+
+
+
+### `Ctrl+T`
+任何命令都可以`cmd Ctrl+T`触发fzf. fzf总会将当前目录下的所有文件(包括目录)列出到交互视图中. 
+
+---
+
+<img src="./.images/fzf-icons/019.png"/>
+
+这个过程调用的是find命令, 并不是`FZF_DEFAULT_COMMAND`. fzf提供`FZF_CTRL_T_COMMAND`和`FZF_CTRL_T_OPTS`来改变这一行为.
+
+```txt
+export FZF_CTRL_T_COMMAND=$FZF_DEFAULT_COMMAND
+export FZF_CTRL_T_OPTS=$FZF_DEFAULT_OPTS
+```
+
+这样列表中的条目只有文件没有目录(<font color = red>前面定义时指定fd或rg搜索的是文件</font>), 所以要重新定义该命令
+
+```bash
+export FZF_CTRL_T_COMMAND="fd -H --follow ."           
+export FZF_CTRL_T_OPTS=$FZF_DEFAULT_OPTS
+```
+> 这里指定fd搜索目录和文件, 因为rg只能搜索文件. 但是选项可以和`FZF_DEFAULT_OPTS`共用. 当<font color = red>`FZF_CTRL_T_OPTS`为字符串时,快捷键将被禁用</font>
+
+
+<br/>
+
+
+
+### `Alt+C`
+它的过程和`Ctrl+T`是一样的, 但它列表中的选项是目录.  fzf也为其提供了2变量来改变它的行为:
+1. `FZF_ALT_C_COMMAND`: 可以指定fd搜索目录
+2. `FZF_ALT_C_OPTS`: 指定相关的选项
+
+
+
+
+### `Ctrl+R`
+任何命令都可以以`cmd Ctrl+R`来触发fzf, fzf会搜索出用户历史命令的记录(读取的shell):
+1. 若再次按下`Ctrl+R`将按时间排序. 
+2. 使用`Ctrl+N`或`Ctrl+P`上下移动
+3. 使用`Ctrl+/`或`Alt+/`将交换命令的顺序
+
+不像前面, fzf只为其定义了选项的变量`FZF_CTRL_R_OPTION`, 一般在该变量里指定高级选项, 这个到后面学习
+
+
+
+
+
+
+### `**<TAB>`
+任何命都可以以`cmd **<TAB>`触发fzf, 这个过程和前面的不同. 它更抽象, 前面的2个快捷操作(`Ctrl+T`和`Alt+C`)在设计上要求用户返回目录和文件(<font color = red>逻辑上可以输出任何内容到标准输出,但最好是按原则来</font>). 而这里的设计更抽象, fzf向外界回调函数`_fzf_comprun`, 在该函数里用户可以自定义更丰富的操作
+
+在`**<TAB>`行为中, fzf为vim和cd定义了具体的操作:
+> 如`vim **<TAB>`触发后, fzf会向外界调用`_fzf_compgen_path`函数, 并将路径`~/`传递到该函数中. 一般情况下该函数的功能是将获取到的所有文件写入到标准输出. 
+
+<br/>
+
+> 再如`cd **<TAB>`触发后, fzf会向外界调用`_fzf_compgen_dir`函数, 并将当前工作目录传递到该函数, 在这个函数中一般是搜索相关的目录写到标准输出, 因为cd本身只能进行目录. 
+
+<br/>
+
+> 在实现这2个回调函数[^ann-cbk]时并不是要改变预定的行为, 要遵循一个原则:该返回目录的返回目录, 该返回文件的就返回文件, 不要改了默认的行为. 用户在函数内要做的是使用高效的程序去搜索目录和文件. <font color = red>若定义了`_fzf_comprun`则vim和cd回调的是comprun</font>
+
+
+笔者给出这几个相关函数的定义大致定义过程:
+
+```bash
+# 供 vim $HOME**tab 的回调函数, 返回文件
+_fzf_compgen_path() {
+    # 这里的 . 是通配符, 必须指定表示搜索任何文件, 并不是当前目录
+    ### $1是$HOME
+   fd -H -t f --follow --exclude={$FZF_IGNORE_SEARCH_PATHS} . $1
+}
+
+# 供 cd **tab 的回调函数, 返回目录
+_fzf_compgen_dir() {
+   fd -H -t d --follow --exclude={$FZF_IGNORE_SEARCH_PATHS} . $1
+}
+```
+
+<br/>
+
+### `_fzf_comprun`
+笔者觉得有必要将这个函数拿出来单独强调. 当用户提供了该回调函数后, `vim\cd **<TAB>`的行为将发生改变, 会直接来到这里. 该函数是所有命令以`cmd **<TAB>`所触发. 这里测试一下不同命令下该函数中的参数列表
+
+```bash
+## .zshrc中
+_fzf_comprun(){
+    echo "" > /tmp/a.log
+    for arg in $@; do
+        echo $arg >> /tmp/a.log
+    done;
+    echo "over"     # 必须向标准输出输出内容
+}
+```
+
+> 笔者直接整理了结果:
+
+```bash
+rm /tmp/a.log
+vim $HOME**             # vim $HOME**<TAB>
+
+cat /tmp/a.log
+vim
+-m
+-q
+--walker
+file,dir,follow,hidden
+--walker-root=/Users/liubo      # 被fzf回调时, 传递的第1个参数是命令名vim, 其余选项是fzf默认规定的, 但路径位于 `--walker-root`
+
+
+
+
+rm /tmp/a.log
+cd $HOME**              # cd $HOME**<TAB>
+cd
+-q
+--walker
+dir,follow
+--walker-root=/Users/liubo      # 对于cd来选项的个数又不一样, 如只有目录, 其他的像路径也一样
+
+
+
+echo hello world**      # echo hello world**<TAB> 
+-m
+-q
+world
+--walker
+file,dir,follow,hidden
+--walker-root=.                 # 参数和vim一样, 但是路径却是当前目录("."), 并不是指定的hello
+```
+
+<br/>
+
+总结: `cmd **<TAB>`被触发时, fzf会传递命令名(<font color = red>$1</font>)以及默认的一些选项`-m -q --walker`等, 路径位于`--walker-root`中, 并且路径必须是合法的, 即以`/`或`./xx`或`../xx`, 所以一般情况下该函数应该处理成如下这样:
+
+```bash
+_fzf_comprun() {
+  local command=$1
+  shift
+    # $@是fzf内部传递出来的选项和值, 用户自己参数没有
+  case "$command" in
+    cd)           fzf --preview 'tree -C {} | head -200'   "$@" ;;
+    export|unset) fzf --preview "eval 'echo \$'{}"         "$@" ;;
+    ssh)          fzf --preview 'dig {}'                   "$@" ;;
+    *)            fzf --preview 'bat -n --color=always {}' "$@" ;;
+  esac
+}
+```
+
+> 这是官方给出的, 从里面可以看出来, 区分了不同的命令, 但最后都是要执行fzf来唤起交互视图
+
+
+# 高级
 
 
 配置其他环境变量
@@ -365,6 +635,7 @@ god() {
 ### fzf专题
 
 
+[^ann-cbk]: 回调函数是编程中的一种事件响应机制, 这里不细说. 在这里就是fzf在处理`vim **<TAB>`时, 需要外界告诉它列表的内容, 所以fzf调用该函数. 在函数内部由外界决定输出什么内容
 
 
 </font>
