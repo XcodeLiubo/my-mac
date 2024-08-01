@@ -151,7 +151,7 @@ fzf --hegiht ~40%       # 用~指定最大高度
 > PS：笔者虚拟机上的fzf版本较低, 这些选项如`~%40`是有有效的
 
 
-### tmux模式
+### tmux模式 <a id="link-tmux"/>
 很多用户有tmux环境, fzf提供了tmux的支持. 多窗口时可以将交互视图显示在window的上方, 这样方便操作
 
 ```bash
@@ -323,7 +323,7 @@ export FZF_DEFAULT_OPTS='-e --walker=file,follow,hidden --walker-skip=${.git,nod
 
 # 配合shell
 ### 4个快捷模式
-fzf的强大在于可以和其他程序无缝衔接. fzf提供了5个模式:
+fzf的强大在于可以和其他程序无缝衔接. fzf提供了4个模式:
 1. `Ctrl+T`: 获取文件和目录的列表
 2. `Alt+C`: 获取目录列表
 3. `Ctrl+R`: 获取历史列表
@@ -457,6 +457,7 @@ dir,follow
 
 
 
+rm /tmp/a.log
 echo hello world**      # echo hello world**<TAB> 
 -m
 -q
@@ -486,8 +487,231 @@ _fzf_comprun() {
 
 > 这是官方给出的, 从里面可以看出来, 区分了不同的命令, 但最后都是要执行fzf来唤起交互视图
 
+# 选项
+fzf功能强大, 可定制性高, 所以内部实现复杂. 通过`man fzf`可以查看所有的功能介绍. 在手册里对功能分了类,下面笔者将简单介绍一下常用的选项
+
+
+
+### 搜索功能
+|简|全|说明|
+|:-|:-|:-|
+|`-x`|`--extended`|扩展模式, 这是默认的|
+|`+x`|`--no-extended`|上面取反|
+|`-e`|`--exact`|精确匹配|
+|`-i`|`--ignore-case`|忽略大小写,要是有大写就匹配大写|
+|`+i`|`--no-ignore`|不忽略大小写|
+|无|`--algo=type`|模糊算法类别,v2最佳评分算法(默认). v1更改但不保证找到最佳结果|
+
+### 搜索结果
+
+|简|全|说明|
+|:-|:-|:-|
+|`+s`|`--no-sort`|不要对结果排序|
+|无|`--tail=NUM`|最多显示多少条数据到列表中|
+|无|`--track`|当视图中的结果列表更新时, 让光标继续选择之前的条目|
+|无|`--tac`|对结果数据进行反转,如history使用该选项后,最新的在最上面|
+
+
+### 交互设置
+|简|全|说明|
+|:-|:-|:-|
+|`-m`|`--multi`|多选模式|
+|`+m`|`--no-multi`|上面取反|
+|无|`--no-mouse`|禁用鼠标|
+|无|`--bind=KEYBINDS`|高级操作,后面有单独的章节|
+
+
+
 
 # 高级
+### 布局
+|简|全|说明|
+|:-|:-|:-|
+|无|`--height=[~]HEIGHT[%]`|交互视图的高度,从鼠标下到窗口的底部这段区域|
+|无|`--tmux`|交互视图位于[tmux](#link-tmux)的上层|
+|无|`--layout=LAYOUT`|[见下](#link-layout)|
+|无|`--border[=BORDER_OPT`|[见下](#link-border)|
+|无|`--border-label`|有上下边框时, 可以在边框上添加标签|
+|无|`--border-label-pos`|标签的位置|
+|无|`--margin`|[见下](#link-space)|
+|无|`--padding`|[见下](#link-space)|
+|无|`--info`|[见下](#link-info)|
+|无|`--info-command`|[见下](#link-info-command)|
+|无|`--separator`|[见下](#link-info-separator)|
+|无|`--scrollbar`|[见下](#link-scrollbal)|
+|无|`--prompt`|[见下](#link-prompt)|
+
+
+对于选项`--height`:
+1. 若是一个负数, 则交互视图的高度为终端高度送去该值
+2. 若指定了`~`时, fzf会自动计算高度, 比如给一个`~100%`时, fzf会根据列表数量来确定高度, 若数量较少,则自动调整合适的高度. 但它使用有以下限制:
+    - 不能与以百分比大小给出的顶部,底部边距和填充一起使用
+    - 不能使用负值, 即`~-2`
+    - 当有多行项目时, 它将找不到正确的尺寸
+
+
+<a id="link-layout"></a>
+对于选项`--layout`, 它表示交互视图从窗口什么地方展示,有3种
+1. default: 输入框在最底部, 在输入框上面的是列表视图
+2. reverse: 输入框从命令行下开始,下面是列表视图
+3. reverse-list: 输入框在窗口底部, 列表视图在命令行下面
+
+
+<br/>
+
+<a id="link-border"></a>
+对于选项`--border`, 它的作用是将交互视图用:
+1. rounded: 4周圆角边框
+2. sharp: 4周锐角角边框
+3. bold: 4周粗线边框
+4. double: 4周双线边框
+5. horizonal: 有2条边, 一条位于命令行下,一条位于最底部
+6. vertical: 有2条边, 一条在视图的左边, 一条在视图的右边
+7. top: 只有1条, 位于视图上边
+8. left: 同上, 位于左边
+9. right: 同上, 位于右边
+10. bottom: 同上, 位于下边
+11. none:没有边框
+
+
+<br/>
+
+对于选项`--border-lable`以及`--border-label-pos`:
+1. 标签不仅仅是文字, 可以是任何输出到标准输出上的内容
+2. 标签问题展示在上或下边框, 所以`--border`指定的模式要包含上下边框
+3. pos指定位置的格式:
+    - `--border-label-pos=[N[:top|bottom]]`
+    - 当不指定top或bottom, 则默认在上边框上展示标签
+    - N为正表示从左边起第N个字符开始展示
+    - N为负表示标签距离窗口右边多少个字符
+
+---
+```bash
+## 在上边的center展示
+fzf --layout default --border --border-label=$(echo '~~~~~~~~~~~傻逼~~~~~~~~~' | lolcat -f -S 444)
+
+## 在下边距离窗口右边3个字符
+fzf --layout default --border --border-label=$(echo '~~~~~~~~~~~傻逼~~~~~~~~~' | lolcat -f -S 444) --border-label-pos=-3:bottom
+```
+<img src="./.images/fzf-icons/020.png"/>
+
+<img src="./.images/fzf-icons/021.png"/>
+
+
+
+
+<a id="link-space"></a>
+对于选项`--margin`以及`--padding`表示交互视图相关的间距:
+
+---
+
+<img src="./.images/fzf-icons/022.png"/>
+
+> 使用格式:
+>
+> 1. `--margin 5%`: 交互视图距离窗口的上下左右为一样的间距
+> 2. `--margin 5%,%10`: 交互视图距离窗口的上下为50%,  左右为10%
+> 3. `--margin 5%,%20, 5%`, 交互视图距离窗口的上为5%, 左右为20%, 下为5%  w  
+> 4. `--margin 5%,%20, 5%, 10%`, 交互视图距离窗口的上为5%, 右20%, 下5%, 左10%
+> 
+> padding是一样的用法
+
+
+<br/>
+
+
+<a id="link-info"></a>
+对于选项`--info`, 它指的是:
+
+<img src="./.images/fzf-icons/023.png"/>
+
+
+它的选项值就是指定它的位置:
+1. default: 默认, 位于输入框下, 左边开始
+2. right: 同上, 但从右边开始
+3. hidden: 不展示
+4. inline: 和输入框在同一行, 左边
+5. `inline:prefix`: 和输入框在同一行, 但自定义了前缀
+6. inline-right: 和输入框在同一行, 但在右边
+7. `inline-right:prefix`; 同上,在右边, 并自定义了前缀
+
+
+----
+
+
+<img src="./.images/fzf-icons/024.png"/>
+<img src="./.images/fzf-icons/025.png"/>
+<img src="./.images/fzf-icons/026.png"/>
+<img src="./.images/fzf-icons/027.png"/>
+
+---
+
+
+<a id="link-info-command"></a>
+对于选项`--info-command`的作用是由外界指定info的内容渲染. 
+
+```bash
+fzf --border --info-command='echo "tierry@@:$FZF_POS#$FZF_INFO"'
+```
+
+---
+
+<img src="./.images/fzf-icons/028.png"/>
+
+> 其中选项的值必须是字符串, 在这里是一个echo命令. 必须用单引号. fzf内部会启动子进程变成shell调用echo, `$FZF_POS`表示info的起始位置, `$FZF_INFO`有原始的info信息(`64/64`)
+
+
+
+<a id="link-info-separator"></a>
+对于选项`--separator`, 它表示info这条线的样式, 默认是`-`
+```bash
+fzf --info-command 'echo "tierry@@:$FZF_POS#$FZF_INFO"' --separator=~
+```
+
+---
+
+<img src="./.images/fzf-icons/029.png"/>
+
+
+<a id="link-scrollbar"></a>
+对于选项`--scrollbar`表示滚动条. 在交互视图中可能出现在列表页及详情页, 对应指定的格式为`--scrollbar=char1[char2]`,其中`char1`表示列表页, `char2`表示详情页. 只能指定ASCII字符, 不能Unicode
+
+```bash
+fzf --info-command 'echo "tierry@@:$FZF_POS#$FZF_INFO"' --separator=~ --scrollbar='&{'
+```
+
+---
+
+<img src="./.images/fzf-icons/030.png"/>
+
+
+<a id="link-prompt"></a>
+对于选项`--prompt`表示输入框左边的字符
+```bash
+fzf --layout reverse --border --prompt=&
+```
+
+---
+
+<img src="./.images/fzf-icons/031.png"/>
+
+
+
+
+
+### 预览
+
+### 绑定
+
+### 执行外部程序
+
+### 刷新
+
+# 高级案例
+
+# 笔者的配置
+
+
 
 
 配置其他环境变量
