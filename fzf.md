@@ -539,7 +539,7 @@ fzf功能强大, 可定制性高, 所以内部实现复杂. 通过`man fzf`可�
 |无|`--height=[~]HEIGHT[%]`|交互视图的高度,从鼠标下到窗口的底部这段区域|
 |无|`--tmux`|交互视图位于[tmux](#link-tmux)的上层|
 |无|`--layout=LAYOUT`|[见下](#link-layout)|
-|无|`--border[=BORDER_OPT`|[见下](#link-border)|
+|无|`--border[=BORDER_OPT]`|[见下](#link-border)|
 |无|`--border-label`|有上下边框时, 可以在边框上添加标签|
 |无|`--border-label-pos`|标签的位置|
 |无|`--margin`|[见下](#link-space)|
@@ -594,7 +594,7 @@ fzf功能强大, 可定制性高, 所以内部实现复杂. 通过`man fzf`可�
 
 对于选项`--border-lable`以及`--border-label-pos`:
 1. 标签不仅仅是文字, 可以是任何输出到标准输出上的内容
-2. 标签问题展示在上或下边框, 所以`--border`指定的模式要包含上下边框
+2. 标签总是展示在上或下边框, 所以`--border`指定的模式要包含上下边框
 3. pos指定位置的格式:
     - `--border-label-pos=[N[:top|bottom]]`
     - 当不指定top或bottom, 则默认在上边框上展示标签
@@ -858,7 +858,7 @@ ATTRIBUTES只用于前景, 即文字. 如下:
 
 
 
-<a id="link-color-hl"></>
+<a id="link-color-hl"></a>
 对于选项`hl`,`fg+`及`bg+`, 效果如下:
 
 ```bash
@@ -900,6 +900,10 @@ ATTRIBUTES只用于前景, 即文字. 如下:
 5. `{f}`: 下面的小节
 6. `{q}`: 引用输入框中的字符串
 7. `{n}`: 引用当前选中列表的序号
+8. `{n3..n5}`: 第3到第5列
+9. `{n3..}`: 第3列到最后
+10. `{..3}`: 第1列到第3列
+11. `..`: 所有的列
 
 ---
 
@@ -1049,60 +1053,154 @@ rg -F $1 ./ | fzf --delimiter : --preview "/tmp/test.sh {1} {2} $1"
 <img src="./.images/fzf-icons/048.gif"/>
 
 
+### 脚本
+|简|全|说明|
+|:-|:-|:-|
+|`-q`|`--query`|直接启动时就传入拂过参数|
+|`-1`|`--select-1`|只有一个结果时,直接选中在命令行,不会有交互视图|
+|`-0`|`--exit-0`|没有结果时,直接退出|
+|`-f`|`--filter`|直接变成命令行搜索|
+|无|`--print-query`|第1行打印查询的字符串|
+|无|`--print-query`|第1行打印查询的字符串|
+|无|`--expect`|[见下](#link-expect)|
+|无|`--read0`|[见下](#link-read0)|
 
-### 绑定
 
-### 执行外部程序
+<br/>
 
-### 刷新
+<a id="link-expect"></a>
+对于选项`--expect`, 它的作用是指定键位完成Enter同样的操作, 但它比Enter会多输出键位名到第1去. 当使用该选项时, Enter键触发后, 也会在第1行打印一个空行. 
+```txt
+--expect="ctrl-a,ctrl-v,@,f1,f2" --epxect="alt-s"
+```
+> 指定多个选项时,会取并集
 
-# 高级案例
-
-# 笔者的配置
+它的优先级要高于`--bind`
 
 
+<br/>
 
-
-配置其他环境变量
+<a id="link-read0"></a>
+对于选项`--read0`表示接收的列表数据中不以换行为准, 以`\0`字符为准
 
 ```bash
-### 系统中没有必要浏览的目录
+echo "hello\0world" | fzf --read0
+```
+
+---
+
+<img src="./.images/fzf-icons/049.png"/>
+
+
+
+
+# 绑定
+### 简介
+fzf提供了事件绑定机制以便实现动态运行时行为. 
+```txt
+fzf --bind="key1:action,key2:action,eveent:action"
+```
+
+### 热键KEY
+键盘上所有的键都可以绑.
+1. `ctrl-xx`: xx为键盘上可见字符
+2. `ctrl-alt-[a-z]`
+3. `alt-xx`:同ctrl
+4. enter
+5. space
+6. backspace
+6. tab
+6. `shift-tab`
+
+> 其他的可以看手册 
+
+
+### 事件EVENT
+|事件|说明|
+|:-|:-|
+|start|fzf启动时会调用, 一般要指定`--sync`|
+|load|标准输入流可用并且列表数据渲染完成时调用|
+|resize|终端尺寸发生变化调用|
+|result|过滤搜索完成, 结果已经准备好时调用|
+|change|键入搜索关键字发生变化就调用|
+|focus|光标从当前行切换到其他行触发|
+|one|当匹配的结果只有一个时触发,`one:accept`和`--select-1`一样, 但它是动态的|
+|zero|当匹配没有结果时触发,`zero:abort`和`--exit-0`一样|
+|jump|跳转到指定的目标后触发|
+|click-header|鼠标点击head触发, 会传递`FZF_CLICK_HEADER_LINE`和`FZF_CLICK_HEADER_COLUMN`|
+
+
+
+<font color = red>start</font>: 在fzf初始化时会调用一次, 一般情况下指定该事件的action时会同时指定`--sync`.
+
+```bash
+seq 1000 | fzf -m --sync --bind start:last+select-all
+```
+> 整个命令表示生成1000个序列, 启动fzf后默认滚动到最后, 并全部选中. 若未指定`--sync`则可能最后并未出现last和select-all的效果. 因为fzf内部的事件和输入流之间是异步的, 可能fzy启动后在调用start事件时, 标准输入流还没有数据. 所以指定`--sync`指定让start的事件等待标准输入可用
+
+<br/>
+
+<font color = red>load</font>: 当标准输入流可用并且列表初始化处理完成时触发. 也会触发一次
+
+```bash
+# 使用load时不需要添加 --sync, 因为此时输入流已可用
+seq 1000 | fzf -m --bind "load:last+select-all"
+
+## 
+seq 1000 | fzf -m --prompt "loading$" --bind load:change-pormpt:tierry$
+```
+
+---
+
+<img src="./.images/fzf-icons/050.gif"/>
+
+
+### ACTION
+这个具体看手册, 有很多.
+
+
+
+### 执行外部程序
+可以设置快捷键来执行外部程序
+
+```bash
+fzf --bind 'f1:execute(less -f {}),ctrl-y:execute-silent(echo {} | pbcopy)+abort'
+```
+> 功能是按下f1后以less命令打开文件. 摁下`ctrl-y`对当前选中的条目做复制并退出, `execute-silent`是后台静默模式.
+
+### 变成新的进程
+上面执行外部程序时,fzf并未结束,而是在新的窗口执行了less, 而`become`则将当前fzf变成指定的程序
+```bash
+fzf --bind enter:become(vim {})
+```
+> 该命令在选中条目后,自动用vim打开, 并结束fzf
+
+### 刷新当前条目
+reload事件可以在不重启fzf的情况下, 直接在当前窗口中对数据刷新. 
+```txt
+--bind change:reload:rg {q}
+```
+> 功能是在键入过程中, 不停的调用rg查关键字查询, 并将查询的结果更新在列表中
+
+
+# 笔者的配置
+笔者将fzf的配置放到一个专门的脚本中, 供shell加载
+```bash
+# 以下2个环境变量分类过滤了相关的目录, 这些目录里大部分是库文件, 平时搜索最好过滤不搜
+#  第1类是系统的目录: 这些目录一般是操作系统或包管理软件, 不需要搜索, 会耗费大量的时间
+#  第2类是用户的目录: 这3个目录里面含有大量的第3方库文件
 export OS_LIB_PATHS="Applications,Library,.cache,.cargo,.cocoapods,.gem,.local,.mygit,.oh-my-zsh,.rustup,.rvm,.vim,.Trash"
-## 笔者平时学习可能要用到的目录
 export TIERRY_STUDY_PATHS="Pods,linux_code,linux_core"
 
 
-### fzf
+# 加载fzf的脚本文件初始化fzf. 
+# 1. 将fzf的可执行文件添加到环境变量
+# 2. 适配zsh
+[ -f $HOME/.fzf.zsh ] && source $HOME/.fzf.zsh      
 
-# 注解注意看!!!
-#   笔者使用fzf总结起来2种模式:
-#       1. 直接键入fzf, 其实没多大用, 这个会在后续扩展      __use_style_1
-#       2. vim/cat/cd/ls ... + \ + TAB                      __use_style_2
-#       3. gof\god函数内部调用到fzf                         __use_style_3
-#       
-#   __use_style_1: 
-#       默认会触发 fzf 的 FZF_DEFAULT_COMMAND环境变量配置的命令, 该命令是rg, 会排除第1类目录:
-#           1. OS_LIB_PATHS
-#       这1类目录文件主要是系统的库文件, 基本不会动, 平常也不看它们, 这样打开速度会快很多.
-#       触发 FZF_DEFUALT_COMMAND的是2个函数gof和god, 主要是选择文件后立即打开, 不粘贴到命令行
-#
-#   __use_style_2:
-#       如"vim \TAB"后会触发 _fzf_compgen_path函数, 该函数由fzf回调出来, 函数内部调用了rg命令,
-#       实际数据传回了fzf, 同时排除2类目录. 速度上的确很快. 但有一个问题, 如Pods目录, 当
-#       用户在一个工程中想编辑Pods中某个文件时, 使用`vim + \TAB`是找不到的, 这个解决会用单独的
-#       脚本函数解决
-#
-#   PS: "cd \TAB"过程和vim一样, 不过使用的是fd的命令回传给fzf的. 以上这2类都会排除上述2类目录, 大大加快速度
-#   
-#   __use_style_3:
-#       为了解决 __use_style_2中的问题, 会搜索3个学习的目录
-#
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh      # PATH
-
-# fzf要忽略的目录
+# 过滤上述2类目录
 export FZF_IGNORE_SEARCH_PATHS=".git,node_modules,${OS_LIB_PATHS},${TIERRY_STUDY_PATHS}"
-# 某些场景下不能忽略3个学习的目录
+# 过滤上述第1类目录
 export TIERRY_IGNORE_SEARCH_PATHS=".git,node_modules,${OS_LIB_PATHS}"
 
 
@@ -1111,104 +1209,105 @@ export TIERRY_IGNORE_SEARCH_PATHS=".git,node_modules,${OS_LIB_PATHS}"
     # -H: 让fd搜索隐藏目录和文件
     # -t: 只要文件
     # --follow: 跟随软链接
-    # --exclude: 让fd在搜索时屏蔽的目录(因为这些目录中的文件太多了)
-    # PS: 可以在FZF_DEFAULT_OPTS中指定屏蔽目录, 但没有用, 因为fzf默认调用的是系统的find, 它不知道fd去除屏蔽的目录选项, 注意不能换行书写
-export FZF_DEFAULT_COMMAND="fd -H -t f --follow --exclude={${TIERRY_IGNORE_SEARCH_PATHS}}"
+    # --exclude: 让fd在搜索时过滤的目录(因为这些目录中的文件太多了)
+    # PS: 可以在FZF_DEFAULT_OPTS中指定过滤目录, 但没有用, 因为fzf默认调用的是系统的find, 它不知道fd去除过滤的目录选项, 注意不能换行书写
+#export FZF_DEFAULT_COMMAND="fd -H -t f --follow --exclude={${FZF_IGNORE_SEARCH_PATHS}}"
+export FD_DEFAULT_COMMAND="fd -H --follow --exclude={${FZF_IGNORE_SEARCH_PATHS}}" # 使用fd搜索目录和文件, 过滤2类目录
+
+
+
+export RIPGREP_CONFIG_PATH=$HOME/.myshell/rg.config                         # 导出rg配置文件, rg本身会用到该变量
+export FZF_RG_ALL_GLOB="--glob='!"'{'${FZF_IGNORE_SEARCH_PATHS}'}'"'"       # rg的glob选项, 这里过滤了2类目录
+export FZF_RG_FIR_GLOB="--glob='!"'{'${TIERRY_IGNORE_SEARCH_PATHS}'}'"'"    # rg的glob选项, 这里过滤了第1类目录
+
+
+export TIERRY_RG_GLOB=${FZF_RG_FIR_GLOB}                                    # 自定义一个用户级别的glob, 过滤第1类目录. 因为可能去 linux下的目录搜索东西
+export TIERRY_RG_COMMAND="rg --files ${TIERRY_RG_GLOB}"                     # 对应的用户级别的命令
+
+export FZF_DEFAULT_COMMAND="rg --files ${FZF_RG_ALL_GLOB}"                  # 无参启动时的fzf命令, 过滤2类目录 
+
 
 # 全局的选项, 这些选项是fzf需要的
-# -e: abc就匹配abc, 不要匹配a或ab或abc(alt-h:上 alt-b:下)
-# -height: 列表窗口的高度(从光标下开始到窗口的底部)
-# --tmux 这个先不管, 配合tmux
-# --layout=reverse: 输入部分的视图在顶部(默认是底部)
-# --bind: 修改上下的选择(默认是Ctrl+n(下), Ctrl+p(上)}
-# --preview: 预览视图, 通过脚本内部统一处理,目前Alacritty下展示图片有问题
-# --preview-window:预览窗口属性
-# 这里可以添加--walker, --walker-skip来指定要搜索文件的类型和屏蔽的目录.
-export FZF_DEFAULT_OPTS='-e --walker=file,follow,hidden --walker-skip=${FZF_IGNORE_SEARCH_PATHS} --height=90%  --tmux bottom,40% --layout=reverse --border=bottom --bind=alt-b:down,alt-h:up --preview="$HOME/.myshell/file-preview.sh {}" --preview-window=right:60%:wrap'
+WALKER_TYPE="--walker=file,follow,hidden"                                   # 当搜索引擎是find时, 要搜索文件,软链接,隐藏文件
+WALKER_FILTER_DIR="--walker-skip=\"${FZF_IGNORE_SEARCH_PATHS}\""            # 当搜索引擎是find时, 要过滤的2类目录
+FZF_DEFAULT_OPTS_HEIGHT="--height 90%"                                      # fzf的交互视图高度, 从光标下到窗口底部的90%
+FZF_DEFAULT_OPTS_LAYOUT="--layout reverse"                                  # 交互视图的输入框在命令行下方, 再下方是列表视图
+FZF_DEFAULT_OPTS_TMUX="--tmux center,80%"                                   # tmux模式时, 交互窗口在最上层, 大小为窗口的80% 
+FZF_DEFAULT_OPTS_BORDER="--border double"                                   # 整个交互视图用双线包裹
+FZF_DEFUALT_OPTS_PREVIEW='--preview "$HOME/.myshell/file-preview.sh {}"'    # 使用 file-preview来处理各种文件的打开
+FZF_DEFUALT_OPTS_INFO_CMD="--info-command 'echo tierry'"         # 使用 file-preview来处理各种文件的打开
+FZF_DEFUALT_OPTS_PREVIEW_WINDOW="--preview-window 'right:60%:wrap,~1'"      # 预览视图的布局
+
+FZF_DEFAULT_OPTS_BORDER_POS="--border-label-pos -5"                         # 标签栏的位置, 上方从右边起数5个字符
+FZF_DEFAULT_OPTS_INFO="--info inline-right:\<"                              # 提示信息,在输入框一行右边
+FZF_DEFAULT_OPTS_ELLIPSIS="--ellipsis ' <more...>'"                         # 列表中的条目显示不够时, 显示更多
+FZF_DEFALUT_OPTS_COLOR="--color 'dark,hl:72:underline,fg+:9:bold,bg+:16,border:202'"          # 匹配字的绿高亮并加下划线(hl:72); 选中条目的文字红(fg+:9); 选中条目的背景暗红(bg+:16); 边框颜色黄红(border:202)
+
+FZF_DEFAULT_OPTS_OTHER_EX="$FZF_DEFAULT_OPTS_BORDER_POS $FZF_DEFAULT_OPTS_INFO $FZF_DEFAULT_OPTS_ELLIPSIS  $FZF_DEFALUT_OPTS_COLOR"
+
+FZF_DEFAULT_OPTS_BIND="--bind 'alt-b:down,alt-h:up,start:change-border-label($(echo tierry | lolcat -f -S 444))+change-header($(echo "搜索结果\n" | lolcat -f -S 72))'"
+#FZF_DEFAULT_OPTS_BIND_PREVIEW_LABLE="--bind \"focus:change-preview-label(${1})\""
+FZF_DEFAULT_OPTS_BIND_PREVIEW_LABLE=""
+# PS: 这里指定了--walker选项, 它提供了fzf本身要过滤的目录, 这样的目的在于fzf使用默认的find时, 也可以过滤上述2类目录, 加快搜索.--preview: 预览视图, 通过脚本内部统一处理,目前Alacritty下展示图片有问题
+export FZF_DEFAULT_OPTS="-e --exit-0 --select-1 $WALKER_TYPE $WALKER_FILTER_DIR $FZF_DEFAULT_OPTS_HEIGHT $FZF_DEFAULT_OPTS_LAYOUT $FZF_DEFAULT_OPTS_TMUX  $FZF_DEFAULT_OPTS_BORDER  $FZF_DEFUALT_OPTS_PREVIEW  $FZF_DEFUALT_OPTS_PREVIEW_WINDOW $FZF_DEFAULT_OPTS_BIND $FZF_DEFAULT_OPTS_OTHER_EX  $FZF_DEFAULT_OPTS_BIND_PREVIEW_LABLE"
 
 
-# 修改 **TAB 事件为 \TAB
-export FZF_COMPLETION_TRIGGER='\'       # **事件触发改为 "\"
-_fzf_compgen_path() {
-   fd -H -t f --follow --exclude={$FZF_IGNORE_SEARCH_PATHS} . $1
-}
-_fzf_compgen_dir() {
-   fd -H -t d --follow --exclude={$FZF_IGNORE_SEARCH_PATHS} . $1
+
+# 摁下Ctrl+T后, 展示目录和文件
+export FZF_CTRL_T_COMMAND=$FD_DEFAULT_COMMAND;
+export FZF_CTRL_T_OPTS=$FZF_DEFAULT_OPTS;
+
+# 摁下Alt+C后, 展示目录
+export FZF_ALT_C_COMMAND="fd -H -t d --follow --exclude={${FZF_IGNORE_SEARCH_PATHS}}"
+export FZF_ALT_C_OPTS=$FZF_DEFAULT_OPTS;
+
+export FZF_COMPLETION_TRIGGER='\'                                           # **事件触发改为 "\"
+
+
+# 以下2个函数是"vim \TAB" 或 "cd \TAB" 后触发
+# 过滤2类目录
+function _fzf_compgen_path() {
+    # 必须写了命令, fzf回调出来的
+    eval "rg --files ${FZF_RG_ALL_GLOB} $1"  
 }
 
-# 下面这2个函数的作用是在选择后立即打开文件或目录, 所以尽量不要在$HOME和$DES下用
-gof() {
-    IFS=$'\n' files=($(fzf-tmux --query="$1" --multi --select-1 --exit-0))
-    [[ -n "$files" ]] && ${EDITOR:-vim} "${files[@]}"
+function _fzf_compgen_dir() {
+    fd -H -t d --follow --exclude={$FZF_IGNORE_SEARCH_PATHS} . $1
 }
-god() {
-    IFS=$'\n' out=("$(fzf-tmux --query="$1" --exit-0 --expect=ctrl-o,ctrl-e)")
-    key=$(head -1 <<< "$out")
-    file=$(head -2 <<< "$out" | tail -1)
-    if [ -n "$file" ]; then
-        [ "$key" = ctrl-o ] && open "$file" || ${EDITOR:-vim} "$file"
-    fi
+
+function gof() {
+    eval "$FZF_DEFAULT_COMMAND $1 | fzf $FZF_DEFAULT_OPTS  --bind 'enter:become(vim {})'"
+}
+
+## 暂时未实现
+function god() {
+    #eval "$FD_DEFAULT_COMMAND -t d . $1 | fzf $FZF_DEFAULT_OPTS --bind 'enter:become(cd {+1})+abort'"
+}
+
+
+
+
+# fzf-query-content 函数最多传递2参数
+#   $1: 搜索路径
+#   $2: 正则表达式
+function fqc(){ 
+    # 使用rg搜索:
+    #   过滤2类目录
+    #   展示在一行: 文件{1}:行号{2}:匹配的内容{3}
+    cmd_lst="rg ${FZF_RG_ALL_GLOB} --line-number --no-heading ${2:-*} ${1:-.}"
+
+    # 列表
+    #   hl:高亮条目中与输入框的字符匹配的字符, 并且加下划线
+    #   fg+:当前选中条目的文件颜色(红9), 加粗
+    #   bg+:当前选中条目的背景偏红(16)
+    #   delimiter指定":"切割
+    #   preview直接使用bat打开{1}(文件) 并且高亮{2}(行号)
+    #   最后绑定Enter键, 回车后直接使用`vim {1} +{2}` ==> `vim main.m +30`, 打开并定位到30行
+    cmd_fzf="fzf --ansi --color dark,hl:72:underline,fg+:9:bold,bg+:16 $FZF_DEFAULT_OPTS --delimiter : --preview \"bat  --color always {1} --highlight-line {2}\" --preview-window '+{2}+3/3,~3' --bind:enter:become(vim {1} +{2}"
+
+    # 用管道执行
+    eval "$cmd_lst | $cmd_fzf"
 }
 ```
 
-<br/>
 
-
-### 使用场景1
-从stdin获取数据, 然后选择输出到stdout
-
----
-
-![fzf-case-1-tree](./.images/fzf-icons/001.png)
-
-
-![fzf-case-1-gif](./.images/fzf-icons/002.gif)
-
-
----
-
-> 图中通过fzf直接回车后, 直接进入了交互模式, 并在列表中将当前目录下所有的文件列举出来(屏蔽了配置中的目录). 当选择文件后, fzf将文件粘贴到了stdout中
-
-
-<br/>
-
-### 使用场景2
-配合其他命令, 如现在想获取`/etc/passwd`下root相关的记录
-
----
-
-![fzf-case-2-gif](./.images/fzf-icons/003.gif)
-
-> 其中`-m`表示多选模式
-
-
-<br/>
-
-### 使用场景3
-配合zoxide(cd), 比单纯的使用cd多了可视化的选择, 更方便了
-
----
-
-![fzf-case-3-gif](./.images/fzf-icons/004.gif)
-
-
-> 这里使用cd在家目录下去找目录, 在交互的过程中, 每输入一项后, fzf都会高亮显示然后不停筛选
-
-
-### 使用场景4
- 当前在任意目录下编辑一个层次很深的文件. 可以指定从桌面开始找
-
----
-
-![fzf-case-4-gif](./.images/fzf-icons/005.gif)
-
-
-<br/>
-
-### fzf专题
-
-
-[^ann-cbk]: 回调函数是编程中的一种事件响应机制, 这里不细说. 在这里就是fzf在处理`vim **<TAB>`时, 需要外界告诉它列表的内容, 所以fzf调用该函数. 在函数内部由外界决定输出什么内容
-
-
-</font>
