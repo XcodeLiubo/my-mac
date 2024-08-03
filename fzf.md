@@ -1284,31 +1284,80 @@ function god() {
 }
 ```
 
+上面的效果如下图
+1. `vim \TAB`
+2. `cd \TAB`
+3. `cd Ctrl+R`
+4. `gof $HOME`
+
+---
+
+<img src="./.images/fzf-icons/051.png"/>
+<img src="./.images/fzf-icons/052.png"/>
+<img src="./.images/fzf-icons/053.png"/>
+<img src="./.images/fzf-icons/054.png"/>
 
 
-# fzf-query-content 函数最多传递2参数
+
+### 高级rg的搜索
+```bash
+# fzf-query-content 函数最多传递2参数(版本1, 屏蔽fzf的模糊搜索)
 #   $1: 搜索路径
 #   $2: 正则表达式
 function fqc(){ 
-    # 使用rg搜索:
-    #   过滤2类目录
-    #   展示在一行: 文件{1}:行号{2}:匹配的内容{3}
-    cmd_lst="rg ${FZF_RG_ALL_GLOB} --line-number --no-heading ${1:-*} ${2:-.}"
+    # 使用rg搜索: 一行展示, 格式是:"文件名:行号:匹配的内容"
+    Q=${1:-*}
+    dir_path=${2:-.}
+    cmd_lst="rg ${FZF_RG_ALL_GLOB} --color always --line-number --no-heading" 
 
     # 列表
-    #   要剔除 select-1 的选项
-    #   delimiter指定":"切割
-    #   preview直接使用bat打开{1}(文件) 并且高亮{2}(行号)
-    #   最后绑定Enter键, 回车后直接使用`vim {1} +{2}` ==> `vim main.m +30`, 打开并定位到30行
-    #cmd_fzf="fzf --no-select-1 --delimiter : --preview \"bat  --color always {1} --highlight-line {2}\" --bind 'enter:become(vim {1} +{2})' --bind 'focus:transform-preview-label(echo {1})'"
-    cmd_fzf="fzf --no-select-1 --delimiter : --preview \"bat  --theme=\'Solarized \(dark\)\' --style=numbers --color always {1}  2> /dev/null  --highlight-line {2}\" --bind 'enter:become(vim {1} +{2})'"
+    #   disabled:       告诉fzf不要在交互输入内容时匹配, 因为这里要手动调用rg来获取数据
+    #   no-select-1     覆盖全局中的 select-1选项
+    #   delimiter:      指定":"切割
+    #   op_color:       关闭fzf的颜色(--ansi), 设置选中的背景和文字颜色
+    #   op_preview:     覆盖全局的preview配置, 主要多了高亮{2}(预览视图中匹配的行高亮)
+    #   op_window:      在全局配置的基础上改成上下结构,并定位
+    #   bind_change:    在输入框内容变化时, 由rg重新在当前目录下搜索, 并刷新列表
+    #   bind_vim:       绑定回车以vim打开文件, 并定位到该行
+    #   PS: 这里要使用rg的高亮, 必须关闭fzf的颜色(--ansi), 然后设置(fg+:-1,表示还原)
+    op_color="--ansi --color 'fg+:-1:bold,bg+:240'"
+    op_preview="--preview \"bat  --theme='Solarized (dark)' --style=numbers --color always {1}  2> /dev/null  --highlight-line {2}\""
+    op_window="--preview-window 'bottom,+{2}+3/3,~3'"
+    bind_change="--bind \"change:reload($HOME/.myshell/tierry-fqc-reload.sh $cmd_lst $dir_path $Q {q})\""
+    bind_vim="--bind 'enter:become(vim {1} +{2})'"
+    cmd_fzf="fzf --disabled --no-select-1 --delimiter : $op_color $op_preview $op_window $bind_change $bind_vim"
+    echo $cmd_fzf
 
-    bat --theme="Solarized (dark)" --style=numbers --color=always "${file}" 2> /dev/null 
-    # 用管道执行
-    #eval "$cmd_fzf"
-   #eval "$cmd_lst"
-    eval "$cmd_lst | $cmd_fzf"
+    eval "$cmd_lst $Q $dir_path | $cmd_fzf"
 }
 ```
+上面牵扯到一个脚本文件`tierry-fqc-reload.sh`, 它的代码如下:
+
+```bash
+Q=$9
+if [[ -z $Q ]]; then
+    Q=$8
+elif [[ $(${#Q}) == 0 ]]; then 
+    Q=$8
+fi
 
 
+sleep 0.3
+
+# $1: rg
+# $2: --glob
+# $3: --color
+# $4: always
+# $5: --line-number
+# $6: --no-heading
+# $7: 路径
+# $8: 默认关键字
+# $9: 查询关键字
+eval "$1 $2 $3 $4 $5 $6 \"$Q\" $7 || true" 
+```
+
+下面这张图是先在`$HOME`下搜索了`vim`关键字, 此后又在输入框中键入了新的关键字, 然后默认从传递的`$HOME`下又搜索了所有`main.m`的关键字文件. 列表中展示的是rg自带的高亮, 预览中是调用bat自带的行高亮, 并定位到该行
+
+---
+
+<img src="./.images/fzf-icons/055.png"/>
