@@ -1021,64 +1021,7 @@ web:*.{html,css,js}*        # 添加自定义glob, 见前面的场景4
 <br/>
 
 ### fzf使用rg引擎
-rg的`--files`可以直接列出指定目录下的所有文件.
-
-```bash
-rg --files          # 默认情况下列出的是当前目录下所有文件, 并且这个过程是递归的
-
-rg $DESK --files    # 列出 桌面下所有文件
-```
-
-基于这种功能, 可以将fzf的搜索引擎配置成rg.前面已经将fzf的搜索引擎替换成了更快的fd. 实际上fd搜索file的速度几乎和rg列出file的速度一样. rg的速度主要是提现在匹配文本上, 所以换不换无所谓. 在这里笔者将替换为rg, 很重要的一点就是记录下rg的配置. 笔者的配置分为2步:
-1. rg配置文件
-2. 配置fzf相关的全局变量
-
-像前面所述, rg并没有预设的配置文件, 它会读取一个环境变量`RIPGREP_CONFIG_PATH`,rg通过该变量指定的路径文件在执行每一次的命令时, 都会加载它里面的配置. 笔者的配置如下:
-
-```txt
-# 跟随符号链接
---follow
-
-# 搜索隐藏文件
---hidden
-
-# 忽略rg的ignore策略
---no-ignore
-```
-在zsh的配置文件中添加如下内容:
-
-```bash
-#export FZF_DEFAULT_COMMAND="fd -H -t f --follow --exclude={${TIERRY_IGNORE_SEARCH_PATHS}}"
-
-# 搜索引擎rg配置(配置文件, 忽略文件)
-export RIPGREP_CONFIG_PATH=$HOME/.myshell/rg.config                 
-## 排除的目录更多
-export FZF_RG_GLOB="--glob='!"'{'${FZF_IGNORE_SEARCH_PATHS}'}'"'"
-## 未排除3个学习的目录
-export FZF_NORMAL_RG_GLOB="--glob='!"'{'${TIERRY_IGNORE_SEARCH_PATHS}'}'"'"
-## 由fzf回车调用或gof,god调用
-#export FZF_DEFAULT_COMMAND="rg --files ${FZF_NORMAL_RG_GLOB}"
-
-# 某些情况下不应该忽略的3个学习目录
-export TIERRY_RG_GLOB=${FZF_NORMAL_RG_GLOB}
-export TIERRY_RG_COMMAND="rg --files ${TIERRY_RG_GLOB}"
-
-
-
-# 修改 **TAB 事件为 \TAB
-export FZF_COMPLETION_TRIGGER='\'       # **事件触发改为 "\"
-_fzf_compgen_path() {
-   #fd -H -t f --follow --exclude={$FZF_IGNORE_SEARCH_PATHS} . $1
-   # 必须用eval调用
-   eval "rg $1 --files ${FZF_RG_GLOB}"  
-}
-```
-
-<br/>
-
-> <font color = red>注意注释掉fd这个引擎, 修改`_fzf_compgen_path`里的搜索命令</font>
-
-
+这个具体看[fzf](./fzf.md)
 
 # sed(sd)
 ### 简介

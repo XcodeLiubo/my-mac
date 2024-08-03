@@ -1018,7 +1018,7 @@ fi
     1. 具体的整数, 表示第几行
     2. 对当前选中条目切割后指定字段的引用, 必须保证字段是整数, 即解析出来也表示第几行
     3. `OFFSETS`表示以SCROLL为基准往上下偏移, 上为负,下为正
-    4. `/DENOM`笔者还没搞清楚它的作用, 可以直接忽略
+    4. `/DENOM`将预览的行号往预览窗口的中部放
 8. `~HEADER_LINES`表示悬浮在顶部固定的行数
 9. default将之前所有项设置为默认
 10. `<SIZE_SHRESHOLD(ALTERNATIVE_LAYOUT)`,可以设置一个阈值, 当达到这一阈值时,将按`ALTERNATIVE_LAYOUT`布局, 不常用
@@ -1184,7 +1184,8 @@ reload事件可以在不重启fzf的情况下, 直接在当前窗口中对数据
 
 
 # 笔者的配置
-笔者将fzf的配置放到一个专门的脚本中, 供shell加载
+### 基本配置
+笔者将fzf的配置放到单独的脚本文件中, 以便维护 
 ```bash
 # 以下2个环境变量分类过滤了相关的目录, 这些目录里大部分是库文件, 平时搜索最好过滤不搜
 #  第1类是系统的目录: 这些目录一般是操作系统或包管理软件, 不需要搜索, 会耗费大量的时间
@@ -1226,7 +1227,6 @@ export TIERRY_RG_COMMAND="rg --files ${TIERRY_RG_GLOB}"                     # �
 
 export FZF_DEFAULT_COMMAND="rg --files ${FZF_RG_ALL_GLOB}"                  # 无参启动时的fzf命令, 过滤2类目录 
 
-
 # 全局的选项, 这些选项是fzf需要的
 WALKER_TYPE="--walker=file,follow,hidden"                                   # 当搜索引擎是find时, 要搜索文件,软链接,隐藏文件
 WALKER_FILTER_DIR="--walker-skip=\"${FZF_IGNORE_SEARCH_PATHS}\""            # 当搜索引擎是find时, 要过滤的2类目录
@@ -1235,19 +1235,18 @@ FZF_DEFAULT_OPTS_LAYOUT="--layout reverse"                                  # �
 FZF_DEFAULT_OPTS_TMUX="--tmux center,80%"                                   # tmux模式时, 交互窗口在最上层, 大小为窗口的80% 
 FZF_DEFAULT_OPTS_BORDER="--border double"                                   # 整个交互视图用双线包裹
 FZF_DEFUALT_OPTS_PREVIEW='--preview "$HOME/.myshell/file-preview.sh {}"'    # 使用 file-preview来处理各种文件的打开
-FZF_DEFUALT_OPTS_INFO_CMD="--info-command 'echo tierry'"         # 使用 file-preview来处理各种文件的打开
 FZF_DEFUALT_OPTS_PREVIEW_WINDOW="--preview-window 'right:60%:wrap,~1'"      # 预览视图的布局
 
 FZF_DEFAULT_OPTS_BORDER_POS="--border-label-pos -5"                         # 标签栏的位置, 上方从右边起数5个字符
 FZF_DEFAULT_OPTS_INFO="--info inline-right:\<"                              # 提示信息,在输入框一行右边
 FZF_DEFAULT_OPTS_ELLIPSIS="--ellipsis ' <more...>'"                         # 列表中的条目显示不够时, 显示更多
-FZF_DEFALUT_OPTS_COLOR="--color 'dark,hl:72:underline,fg+:9:bold,bg+:16,border:202'"          # 匹配字的绿高亮并加下划线(hl:72); 选中条目的文字红(fg+:9); 选中条目的背景暗红(bg+:16); 边框颜色黄红(border:202)
+FZF_DEFALUT_OPTS_COLOR="--color 'dark,hl:72:underline,fg+:9:bold,bg+:16,border:202,preview-label:202'"          # 匹配字的绿高亮并加下划线(hl:72); 选中条目的文字红(fg+:9); 选中条目的背景暗红(bg+:16); 边框颜色黄红(border:202)
 
 FZF_DEFAULT_OPTS_OTHER_EX="$FZF_DEFAULT_OPTS_BORDER_POS $FZF_DEFAULT_OPTS_INFO $FZF_DEFAULT_OPTS_ELLIPSIS  $FZF_DEFALUT_OPTS_COLOR"
 
 FZF_DEFAULT_OPTS_BIND="--bind 'alt-b:down,alt-h:up,start:change-border-label($(echo tierry | lolcat -f -S 444))+change-header($(echo "搜索结果\n" | lolcat -f -S 72))'"
-#FZF_DEFAULT_OPTS_BIND_PREVIEW_LABLE="--bind \"focus:change-preview-label(${1})\""
-FZF_DEFAULT_OPTS_BIND_PREVIEW_LABLE=""
+# 脚本文件: [[ -d ${1} ]] && echo $(basename $1) || echo ${1##*/}
+FZF_DEFAULT_OPTS_BIND_PREVIEW_LABLE="--bind 'focus:transform-preview-label($HOME/.myshell/tierry-fzf-preview-label-show.sh {1})'"
 # PS: 这里指定了--walker选项, 它提供了fzf本身要过滤的目录, 这样的目的在于fzf使用默认的find时, 也可以过滤上述2类目录, 加快搜索.--preview: 预览视图, 通过脚本内部统一处理,目前Alacritty下展示图片有问题
 export FZF_DEFAULT_OPTS="-e --exit-0 --select-1 $WALKER_TYPE $WALKER_FILTER_DIR $FZF_DEFAULT_OPTS_HEIGHT $FZF_DEFAULT_OPTS_LAYOUT $FZF_DEFAULT_OPTS_TMUX  $FZF_DEFAULT_OPTS_BORDER  $FZF_DEFUALT_OPTS_PREVIEW  $FZF_DEFUALT_OPTS_PREVIEW_WINDOW $FZF_DEFAULT_OPTS_BIND $FZF_DEFAULT_OPTS_OTHER_EX  $FZF_DEFAULT_OPTS_BIND_PREVIEW_LABLE"
 
@@ -1283,7 +1282,7 @@ function gof() {
 function god() {
     #eval "$FD_DEFAULT_COMMAND -t d . $1 | fzf $FZF_DEFAULT_OPTS --bind 'enter:become(cd {+1})+abort'"
 }
-
+```
 
 
 
@@ -1294,18 +1293,20 @@ function fqc(){
     # 使用rg搜索:
     #   过滤2类目录
     #   展示在一行: 文件{1}:行号{2}:匹配的内容{3}
-    cmd_lst="rg ${FZF_RG_ALL_GLOB} --line-number --no-heading ${2:-*} ${1:-.}"
+    cmd_lst="rg ${FZF_RG_ALL_GLOB} --line-number --no-heading ${1:-*} ${2:-.}"
 
     # 列表
-    #   hl:高亮条目中与输入框的字符匹配的字符, 并且加下划线
-    #   fg+:当前选中条目的文件颜色(红9), 加粗
-    #   bg+:当前选中条目的背景偏红(16)
+    #   要剔除 select-1 的选项
     #   delimiter指定":"切割
     #   preview直接使用bat打开{1}(文件) 并且高亮{2}(行号)
     #   最后绑定Enter键, 回车后直接使用`vim {1} +{2}` ==> `vim main.m +30`, 打开并定位到30行
-    cmd_fzf="fzf --ansi --color dark,hl:72:underline,fg+:9:bold,bg+:16 $FZF_DEFAULT_OPTS --delimiter : --preview \"bat  --color always {1} --highlight-line {2}\" --preview-window '+{2}+3/3,~3' --bind:enter:become(vim {1} +{2}"
+    #cmd_fzf="fzf --no-select-1 --delimiter : --preview \"bat  --color always {1} --highlight-line {2}\" --bind 'enter:become(vim {1} +{2})' --bind 'focus:transform-preview-label(echo {1})'"
+    cmd_fzf="fzf --no-select-1 --delimiter : --preview \"bat  --theme=\'Solarized \(dark\)\' --style=numbers --color always {1}  2> /dev/null  --highlight-line {2}\" --bind 'enter:become(vim {1} +{2})'"
 
+    bat --theme="Solarized (dark)" --style=numbers --color=always "${file}" 2> /dev/null 
     # 用管道执行
+    #eval "$cmd_fzf"
+   #eval "$cmd_lst"
     eval "$cmd_lst | $cmd_fzf"
 }
 ```
