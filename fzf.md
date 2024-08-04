@@ -1389,6 +1389,28 @@ function fqt(){
 }
 ```
 
+上面涉及到一个脚本文件`tierry-fqc-reload.sh`, 代码如下:
+
+```bash
+Q=$8
+if [[ -z $Q ]]; then
+    Q="\".*\""
+fi
+
+
+sleep 0.3
+
+# $1: rg
+# $2: --glob
+# $3: --color
+# $4: always
+# $5: --line-number
+# $6: --no-heading
+# $7: 路径
+# $8: 关键字
+eval "$1 $2 $3 $4 $5 $6 $Q $7 || true" 
+```
+
 ---
 
 
