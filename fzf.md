@@ -1056,11 +1056,10 @@ rg -F $1 ./ | fzf --delimiter : --preview "/tmp/test.sh {1} {2} $1"
 ### 脚本
 |简|全|说明|
 |:-|:-|:-|
-|`-q`|`--query`|直接启动时就传入拂过参数|
+|`-q`|`--query`|启动时就传递搜索关键字|
 |`-1`|`--select-1`|只有一个结果时,直接选中在命令行,不会有交互视图|
 |`-0`|`--exit-0`|没有结果时,直接退出|
 |`-f`|`--filter`|直接变成命令行搜索|
-|无|`--print-query`|第1行打印查询的字符串|
 |无|`--print-query`|第1行打印查询的字符串|
 |无|`--expect`|[见下](#link-expect)|
 |无|`--read0`|[见下](#link-read0)|
@@ -1245,8 +1244,8 @@ FZF_DEFALUT_OPTS_COLOR="--color 'dark,hl:72:underline,fg+:9:bold,bg+:16,border:2
 FZF_DEFAULT_OPTS_OTHER_EX="$FZF_DEFAULT_OPTS_BORDER_POS $FZF_DEFAULT_OPTS_INFO $FZF_DEFAULT_OPTS_ELLIPSIS  $FZF_DEFALUT_OPTS_COLOR"
 
 FZF_DEFAULT_OPTS_BIND="--bind 'alt-b:down,alt-h:up,start:change-border-label($(echo tierry | lolcat -f -S 444))+change-header($(echo "搜索结果\n" | lolcat -f -S 72))'"
-# 脚本文件: [[ -d ${1} ]] && echo $(basename $1) || echo ${1##*/}
-FZF_DEFAULT_OPTS_BIND_PREVIEW_LABLE="--bind 'focus:transform-preview-label($HOME/.myshell/tierry-fzf-preview-label-show.sh {1})'"
+# 高级语法, 使用transform时,引用{}要加\{}, transform里意味着可以写shell相关的命令
+FZF_DEFAULT_OPTS_BIND_PREVIEW_LABLE='--bind "focus:transform-preview-label:echo $(basename \{1})"'
 # PS: 这里指定了--walker选项, 它提供了fzf本身要过滤的目录, 这样的目的在于fzf使用默认的find时, 也可以过滤上述2类目录, 加快搜索.--preview: 预览视图, 通过脚本内部统一处理,目前Alacritty下展示图片有问题
 export FZF_DEFAULT_OPTS="-e --exit-0 --select-1 $WALKER_TYPE $WALKER_FILTER_DIR $FZF_DEFAULT_OPTS_HEIGHT $FZF_DEFAULT_OPTS_LAYOUT $FZF_DEFAULT_OPTS_TMUX  $FZF_DEFAULT_OPTS_BORDER  $FZF_DEFUALT_OPTS_PREVIEW  $FZF_DEFUALT_OPTS_PREVIEW_WINDOW $FZF_DEFAULT_OPTS_BIND $FZF_DEFAULT_OPTS_OTHER_EX  $FZF_DEFAULT_OPTS_BIND_PREVIEW_LABLE"
 
@@ -1299,65 +1298,119 @@ function god() {
 
 
 
-### 高级rg的搜索
-```bash
-# fzf-query-content 函数最多传递2参数(版本1, 屏蔽fzf的模糊搜索)
-#   $1: 搜索路径
-#   $2: 正则表达式
-function fqc(){ 
-    # 使用rg搜索: 一行展示, 格式是:"文件名:行号:匹配的内容"
-    Q=${1:-*}
-    dir_path=${2:-.}
-    cmd_lst="rg ${FZF_RG_ALL_GLOB} --color always --line-number --no-heading" 
+### 高级rg用法
+笔者实现了2个功能:
+1. 根据关键字搜索, 高亮展示, 并定位预览
+2. 在1的基础上来回切换fzf的模糊搜索
 
-    # 列表
-    #   disabled:       告诉fzf不要在交互输入内容时匹配, 因为这里要手动调用rg来获取数据
-    #   no-select-1     覆盖全局中的 select-1选项
-    #   delimiter:      指定":"切割
-    #   op_color:       关闭fzf的颜色(--ansi), 设置选中的背景和文字颜色
-    #   op_preview:     覆盖全局的preview配置, 主要多了高亮{2}(预览视图中匹配的行高亮)
-    #   op_window:      在全局配置的基础上改成上下结构,并定位
-    #   bind_change:    在输入框内容变化时, 由rg重新在当前目录下搜索, 并刷新列表
-    #   bind_vim:       绑定回车以vim打开文件, 并定位到该行
-    #   PS: 这里要使用rg的高亮, 必须关闭fzf的颜色(--ansi), 然后设置(fg+:-1,表示还原)
-    op_color="--ansi --color 'fg+:-1:bold,bg+:240'"
-    op_preview="--preview \"bat  --theme='Solarized (dark)' --style=numbers --color always {1}  2> /dev/null  --highlight-line {2}\""
-    op_window="--preview-window 'bottom,+{2}+3/3,~3'"
-    bind_change="--bind \"change:reload($HOME/.myshell/tierry-fqc-reload.sh $cmd_lst $dir_path $Q {q})\""
-    bind_vim="--bind 'enter:become(vim {1} +{2})'"
-    cmd_fzf="fzf --disabled --no-select-1 --delimiter : $op_color $op_preview $op_window $bind_change $bind_vim"
-    echo $cmd_fzf
+```bash
+# fzf query frome rg
+#
+# 函数最多传递2参数
+#   $1: 正则表达式, 若没有则".*", 相当于任何内容都搜索
+#   $2: 搜索路径,   若没有则".",  相当于在当前目录下搜索
+#
+# rg部分:
+#   主要是构建列表数据.
+#   1. 第1次启动直接根据关键词$Q来构建fzf的列表数据
+#   2. 后续键入关键词后根据该词搜索{q}, 若为空则搜索全部内容, 构造fzf的列表数据
+#   PS: 列表数据格式"filename:linenumber:content(高亮)"
+#
+# fzf部分:
+#   op_disabled:    屏蔽fzf本身的模糊搜索,因为我们要手动调用rg来刷新
+#   op_noselect:    覆盖全局中的 select-1选项
+#   op_query:       主要用于第1次, 启动后在输入框显示搜索的关键词. 后续显示用户时时键入的关键词
+#   op_color:       启用颜色处理(--ansi),不然列表条目不能被rg渲染, 并且预览视图没有数据. 重新设置选中的背景和文字颜色
+#   op_delimiter:   指定":"切割
+#   op_preview:     覆盖全局的preview配置, 主要多了高亮{2}(预览视图中匹配的行高亮)
+#   op_window:      在全局配置的基础上改成上下结构,并定位
+#   bind_change:    在输入框内容变化时, 由rg重新在当前目录下搜索, 并刷新列表
+#   bind_vim:       绑定回车以vim打开文件, 并定位到该行
+#   PS: 这里要使用rg的高亮, 必须关闭fzf的颜色(--ansi), 然后设置(fg+:-1,表示还原)
+function fqr(){
+    Q=${1:-"\".*\""}
+    dir_path=${2:-.}
+    cmd_lst="rg ${FZF_RG_ALL_GLOB} --color always --line-number --no-heading"
+
+    op_query='--query $Q'
+    op_disable='--disabled'
+    op_noselect='--no-select-1'
+    op_delimiter='--delimiter ":"'
+    bind_vim='--bind "enter:become(vim {1} +{2})"'
+    op_color='--ansi --color "fg+:-1:bold,bg+:240"'
+    op_window='--preview-window "bottom,+{2}+3/3,~3"'
+    bind_change='--bind "change:reload($HOME/.myshell/tierry-fqc-reload.sh $cmd_lst $dir_path {q})"'
+    op_preview='--preview "bat  --theme=\"Solarized (dark)\" --style numbers --color always {1}  2> \"/dev/null\"  --highlight-line {2}"'
+    cmd_fzf="fzf $op_disable $op_noselect $op_query $op_color $op_delimiter $op_preview $op_window $bind_change $bind_vim"
 
     eval "$cmd_lst $Q $dir_path | $cmd_fzf"
 }
-```
-上面牵扯到一个脚本文件`tierry-fqc-reload.sh`, 它的代码如下:
-
-```bash
-Q=$9
-if [[ -z $Q ]]; then
-    Q=$8
-elif [[ $(${#Q}) == 0 ]]; then 
-    Q=$8
-fi
-
-
-sleep 0.3
-
-# $1: rg
-# $2: --glob
-# $3: --color
-# $4: always
-# $5: --line-number
-# $6: --no-heading
-# $7: 路径
-# $8: 默认关键字
-# $9: 查询关键字
-eval "$1 $2 $3 $4 $5 $6 \"$Q\" $7 || true" 
-```
-
-下面这张图是先在`$HOME`下搜索了`vim`关键字, 此后又在输入框中键入了新的关键字, 然后默认从传递的`$HOME`下又搜索了所有`main.m`的关键字文件. 列表中展示的是rg自带的高亮, 预览中是调用bat自带的行高亮, 并定位到该行
 
 ---
 
 <img src="./.images/fzf-icons/055.png"/>
+
+
+# fzf query toggle(rg,fzf)
+#
+# 使用ctrl-t来回切换rg和fzf的搜索. 
+# 记录了2种状态的关键字, 切换后会还原, fzf的搜索是基于rg给出的列表
+# rg模式下可以清空关键字重新搜索给出新的列表
+function fqt(){
+    Q=${1:-"\".*\""}
+    dir_path=${2:-.}
+    cmd_lst="rg ${FZF_RG_ALL_GLOB} --color always --line-number --no-heading" 
+
+
+    rg_record_file="/tmp/.$$-rg.txt"
+    fzf_record_file="/tmp/.$$-fzf.txt"
+     
+    ## 选项以及选项的值是给fzf的, 直接使用单引号, 不要转义
+    op_query='--query $Q'
+    op_disable='--disabled'
+    op_noselect='--no-select-1'
+    op_delimiter='--delimiter ":"'
+    op_prompt='--prompt "M(rg)> "'
+    bind_vim='--bind "enter:become(vim {1} +{2})"'
+    op_color='--ansi --color "fg+:-1:bold,bg+:240"'
+    op_window='--preview-window "bottom,+{2}+3/3,~3"'
+    bind_change='--bind "change:reload($HOME/.myshell/tierry-fqc-reload.sh $cmd_lst $dir_path {q})"'
+
+    ## 注意要解析出 $rg_record_file, 所以必须在双引号内
+    cond_rg='[[ $FZF_PROMPT =~ "rg" ]]'
+    unbind='echo "unbind(change)+change-prompt(M(fzf)> )+enable-search+transform-query:echo \{q} > '"$rg_record_file"'; cat '"$fzf_record_file\""
+    rebind='echo "rebind(change)+change-prompt(M(rg)> )+disable-search+transform-query:echo \{q} > '"$fzf_record_file"'; cat '"$rg_record_file\""
+    bind_toggle="--bind 'ctrl-t:transform:$cond_rg && $unbind || $rebind'" 
+
+    op_preview='--preview "bat  --theme=\"Solarized (dark)\" --style numbers --color always {1}  2> \"/dev/null\"  --highlight-line {2}"'
+    cmd_fzf="fzf $op_disable $op_noselect $op_query $op_color $op_delimiter $op_prompt $op_preview $op_window $bind_change $bind_toggle $bind_vim"
+
+    eval "$cmd_lst $Q $dir_path | $cmd_fzf"
+}
+```
+
+---
+
+
+<img src="./.images/fzf-icons/056.png"/>
+<img src="./.images/fzf-icons/057.png"/>
+<img src="./.images/fzf-icons/058.png"/>
+<img src="./.images/fzf-icons/059.png"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
